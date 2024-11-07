@@ -97,7 +97,7 @@ public class PieceInputHandler extends InputAdapter {
             System.out.println("Selected piece at: " + (char) liftX + ", " + (char) liftY);
             for(int col = 0; col <8; ++col){
                 for(int row = 0; row<8; ++row){
-                    if(selectedPiece.isValidMove(oldX,oldY, col, row, board)){
+                    if(!(oldX == col && oldY == row) && selectedPiece.isValidMove(oldX,oldY, col, row, board)){
                         Blank temp = possibilities[row][col];
                         temp.setTexture(new Texture("green.png"));
                     }
@@ -117,6 +117,12 @@ public class PieceInputHandler extends InputAdapter {
 
     // Method to handle placing the piece
     private void handlePlace(int screenX, int screenY) {
+        for(int col = 0; col <8; ++col){
+            for(int row = 0; row<8; ++row){
+                Blank temp = possibilities[row][col];
+                temp.setTexture(new Texture("blank.png"));
+            }
+        }
         Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
         camera.unproject(worldCoordinates);
         int placeX = coords.worldToBoardX(worldCoordinates.x);
