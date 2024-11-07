@@ -17,15 +17,17 @@ public class GameManager extends ScreenAdapter {
     private final Object turnLock = new Object();
     private boolean whiteTurn;
     private final Piece[][] board;
+    private final Blank[][] possibilities;
     private final Piece[] castlingPieces;
     private final StockfishAI stockfishAI;
-    private final int DEPTH = 12;
+    private final int DEPTH = 1;
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
 
     public GameManager() throws IOException {
         board = new Piece[8][8];
+        possibilities = new Blank[8][8];
         whiteTurn = true;
         castlingPieces = new Piece[6];
         setupPieces();
@@ -78,10 +80,17 @@ public class GameManager extends ScreenAdapter {
         castlingPieces[4] = board[7][4];
         // black kingside rook
         castlingPieces[5] = board[7][7];
+
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 0; j < board[i].length; j++) {
+                possibilities[i][j] = new Blank();
+            }
+        }
+
+
     }
 
     public boolean movePiece(String move) {
-
         if (move.isEmpty()) {
             return false;
         }
@@ -92,6 +101,7 @@ public class GameManager extends ScreenAdapter {
         int endRow = parsedMove[3];
         char newRank;
         Piece piece = board[startRow][startCol];
+        System.out.println(startCol);
         enPassantSquare = null;
 
         // Ensure the right piece color is moving according to the turn
@@ -310,6 +320,10 @@ public class GameManager extends ScreenAdapter {
 
     public Piece[][] getBoard() {
         return board;
+    }
+
+    public Blank[][] getPossibilities(){
+        return possibilities;
     }
 
     public void printBoard() {

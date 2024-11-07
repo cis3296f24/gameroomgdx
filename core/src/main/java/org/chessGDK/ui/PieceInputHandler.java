@@ -2,6 +2,8 @@ package org.chessGDK.ui;
 
 import com.badlogic.gdx.graphics.Camera;
 import org.chessGDK.logic.GameManager;
+import org.chessGDK.pieces.Blank;
+import org.chessGDK.pieces.Pawn;
 import org.chessGDK.pieces.Piece;
 
 import com.badlogic.gdx.Input;
@@ -9,6 +11,8 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import org.chessGDK.utils.CoordinateUtils;
+
+import com.badlogic.gdx.graphics.Texture;
 
 public class PieceInputHandler extends InputAdapter {
     private Piece selectedPiece = null;
@@ -21,14 +25,16 @@ public class PieceInputHandler extends InputAdapter {
     private final GameManager gm;
     private final Camera camera;
     private final Piece[][] board;
+    private final Blank[][] possibilities;
     private final int TILE_SIZE;
 
     private CoordinateUtils coords;
 
-    public PieceInputHandler(GameManager gm, Camera camera, Piece[][] board, int tileSize) {
+    public PieceInputHandler(GameManager gm, Camera camera, Piece[][] board, Blank[][] p, int tileSize) {
         this.gm = gm;
         this.camera = camera;
         this.board = board;
+        this.possibilities = p;
         this.TILE_SIZE = tileSize;
         coords = new CoordinateUtils(TILE_SIZE);
     }
@@ -74,7 +80,8 @@ public class PieceInputHandler extends InputAdapter {
 
         int liftX = coords.worldToBoardX(worldCoordinates.x);
         int liftY = coords.worldToBoardY(worldCoordinates.y);
-
+        int oldX = coords.worldToBoardX(worldCoordinates.x);
+        int oldY = coords.worldToBoardY(worldCoordinates.y);
         // First click: Select a piece if there's one at this position
         selectedPiece = board[liftY][liftX];
         if (selectedPiece != null) {
@@ -88,6 +95,14 @@ public class PieceInputHandler extends InputAdapter {
             liftY += '1';
             startPos = new Vector2(liftX, liftY);
             System.out.println("Selected piece at: " + (char) liftX + ", " + (char) liftY);
+            for(int col = 0; col <8; ++col){
+                for(int row = 0; row<8; ++row){
+                    if(selectedPiece.isValidMove(oldX,oldY, col, row, board)){
+                        Blank temp = possibilities[row][col];
+                        temp.setTexture(new Texture("green.png"));
+                    }
+                }
+            }
         }
     }
 
