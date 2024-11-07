@@ -10,7 +10,7 @@ public class Blank {
     private float yPos;
 
     public Blank() {
-        pieceTexture = new Texture("blank.jpg");
+        pieceTexture = new Texture("blank.png");
     }
     public Texture getTexture() {
         return pieceTexture;
