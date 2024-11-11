@@ -46,14 +46,25 @@ public class MenuScreen implements Screen{
         table.setFillParent(true);
         stage.addActor(table);
 
-        TextButton Play = new TextButton("Play", skin);
-        table.add(Play);
-        Play.addListener(new ClickListener(){
+        TextButton Singleplayer = new TextButton("Singleplayer", skin);
+        table.add(Singleplayer);
+        Singleplayer.addListener(new ClickListener(){
             public void clicked (InputEvent event, float x, float y){
                 screenManager.playChess();
             }
         });
 
+        table.row();
+
+        TextButton Multiplayer = new TextButton("Multiplayer", skin);
+        table.add(Multiplayer);
+        Multiplayer.addListener(new ClickListener(){
+            public void clicked (InputEvent event, float x, float y){
+                screenManager.playChess();
+            }
+        });
+
+        table.row();
 
         TextButton Exit = new TextButton("Exit", skin);
         table.add(Exit);
