@@ -4,12 +4,14 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.*;
-
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -29,6 +31,7 @@ public class MenuScreen implements Screen{
     private ScreenManager screenManager;
     private Stage stage;
     private Skin skin;
+    private SelectBox<String> selectBox;
 
 
     public MenuScreen(ScreenManager screenManager){
@@ -54,11 +57,32 @@ public class MenuScreen implements Screen{
             }
         });
 
+        selectBox = new SelectBox<>(skin);
+        table.add(selectBox);
+        selectBox.setItems("Level 1", "Level 2", "Level 3");
+
+        selectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+
+            }
+        });
+
         table.row();
 
         TextButton Multiplayer = new TextButton("Multiplayer", skin);
         table.add(Multiplayer);
         Multiplayer.addListener(new ClickListener(){
+            public void clicked (InputEvent event, float x, float y){
+                screenManager.playChess();
+            }
+        });
+
+        table.row();
+
+        TextButton Puzzle = new TextButton("Puzzle", skin);
+        table.add(Puzzle);
+        Puzzle.addListener(new ClickListener(){
             public void clicked (InputEvent event, float x, float y){
                 screenManager.playChess();
             }
