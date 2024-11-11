@@ -53,8 +53,7 @@ public class ScreenManager extends Game {
 
     @Override
     public void dispose() {
-        // Dispose of resources when the game ends
-        chessBoardScreen.dispose();
+
     }
 
     // Add other methods to manage game state, screens, etc.

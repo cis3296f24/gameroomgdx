@@ -54,6 +54,7 @@ public class MenuScreen implements Screen{
             }
         });
 
+
         TextButton Exit = new TextButton("Exit", skin);
         table.add(Exit);
         Exit.addListener(new ClickListener(){
