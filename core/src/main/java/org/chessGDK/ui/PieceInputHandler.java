@@ -41,26 +41,26 @@ public class PieceInputHandler extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-            // Convert screen coordinates to world coordinates
-            if (button == Input.Buttons.LEFT) {
-                Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
-                camera.unproject(worldCoordinates); // Convert to world coordinates
-                if (firstClick) {
-                    liftPositon.set(worldCoordinates); // Store the first click position
-                    handleLift(screenX, screenY);
-                } else {
-                    dropPosition.set(worldCoordinates); // Store the second click position
-                    handlePlace(screenX, screenY);
-                    isDragging = false;
-                }
-                return true;
+        // Convert screen coordinates to world coordinates
+        if (button == Input.Buttons.LEFT) {
+            Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
+            camera.unproject(worldCoordinates); // Convert to world coordinates
+            if (firstClick) {
+                liftPositon.set(worldCoordinates); // Store the first click position
+                handleLift(screenX, screenY);
+            } else {
+                dropPosition.set(worldCoordinates); // Store the second click position
+                handlePlace(screenX, screenY);
+                isDragging = false;
             }
-            if (button == Input.Buttons.RIGHT && isDragging) {
-                cancelLift();
-                return true;
-            }
-            return false;
+            return true;
         }
+        if (button == Input.Buttons.RIGHT && isDragging) {
+            cancelLift();
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
@@ -95,21 +95,15 @@ public class PieceInputHandler extends InputAdapter {
             liftY += '1';
             startPos = new Vector2(liftX, liftY);
             System.out.println("Selected piece at: " + (char) liftX + ", " + (char) liftY);
-            for(int col = 0; col <8; ++col){
-                for(int row = 0; row<8; ++row){
-                    if(!(oldX == col && oldY == row) && selectedPiece.isValidMove(oldX,oldY, col, row, board)){
-                        Blank temp = possibilities[row][col];
-                        temp.setTexture(new Texture("green.png"));
-                    }
-                }
-            }
+            showPossible(oldX, oldY);
         }
     }
 
     private void cancelLift() {
         selectedPiece.setPosition(coords.worldToBoardX(liftPositon.x) * TILE_SIZE,
-                                coords.worldToBoardY(liftPositon.y) * TILE_SIZE);
+                coords.worldToBoardY(liftPositon.y) * TILE_SIZE);
         System.out.println("Move cancelled");
+        clearPossible();
         firstClick = true;
         isDragging = false;
         selectedPiece = null;
@@ -117,12 +111,7 @@ public class PieceInputHandler extends InputAdapter {
 
     // Method to handle placing the piece
     private void handlePlace(int screenX, int screenY) {
-        for(int col = 0; col <8; ++col){
-            for(int row = 0; row<8; ++row){
-                Blank temp = possibilities[row][col];
-                temp.setTexture(new Texture("blank.png"));
-            }
-        }
+        clearPossible();
         Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
         camera.unproject(worldCoordinates);
         int placeX = coords.worldToBoardX(worldCoordinates.x);
@@ -131,9 +120,9 @@ public class PieceInputHandler extends InputAdapter {
         placeX += 'a';
         placeY += '1';
         String move = String.valueOf((char) startPos.x) +
-            (char) startPos.y +
-            (char) placeX +
-            (char) placeY;
+                (char) startPos.y +
+                (char) placeX +
+                (char) placeY;
         if (gm.movePiece(move)) {
             System.out.println("Placed piece at: " + (char) placeX + ", " + (char) placeY);
             placeX -= 'a';
@@ -147,5 +136,25 @@ public class PieceInputHandler extends InputAdapter {
         firstClick = true; // Reset for the next turn
         selectedPiece = null;  // Reset selection
         startPos = null;
+    }
+    
+    private void showPossible(int oldX, int oldY) {
+        for(int col = 0; col <8; ++col){
+            for(int row = 0; row<8; ++row){
+                if(!(oldX == col && oldY == row) && selectedPiece.isValidMove(oldX, oldY, col, row, board)){
+                    Blank temp = possibilities[row][col];
+                    temp.setTexture(new Texture("green.png"));
+                }
+            }
+        }
+    }
+    
+    private void clearPossible() {
+        for(int col = 0; col <8; ++col){
+            for(int row = 0; row<8; ++row){
+                Blank temp = possibilities[row][col];
+                temp.setTexture(new Texture("blank.png"));
+            }
+        }
     }
 }

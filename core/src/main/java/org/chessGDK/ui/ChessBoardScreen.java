@@ -171,7 +171,7 @@ public class ChessBoardScreen implements Screen {
             for (int j = 0; j < board[i].length; j++) {
                 Piece piece = board[i][j];
                 Blank b = possibilities[i][j];
-                batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE - 5);
+                batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE);
                 if (piece == null || piece.isAnimating()) continue;
                 batch.draw(piece.getTexture(), piece.getXPos(), piece.getYPos(), TILE_SIZE, TILE_SIZE - 5);
             }
