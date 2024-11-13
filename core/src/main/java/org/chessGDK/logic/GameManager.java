@@ -21,18 +21,18 @@ public class GameManager extends ScreenAdapter {
     private final Blank[][] possibilities;
     private final Piece[] castlingPieces;
     private final StockfishAI stockfishAI;
-    private final int DEPTH = 1;
+    private final int DEPTH = 12;
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
 
-    public GameManager() throws IOException {
+    public GameManager(int difficulty) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
         castlingPieces = new Piece[6];
         setupPieces();
-        stockfishAI = new StockfishAI(DEPTH);
+        stockfishAI = new StockfishAI(DEPTH, difficulty);
         printBoard();
         halfMoves = 0;
         castlingRights = "KQkq";
@@ -131,9 +131,7 @@ public class GameManager extends ScreenAdapter {
             whiteTurn = !whiteTurn;
             halfMoves++;
             piece.setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
-            if (!whiteTurn) {
-                aiTurn();
-            }
+            makeNextMove();
             return true;
         }
         return false;
@@ -263,7 +261,7 @@ public class GameManager extends ScreenAdapter {
     public void makeNextMove() {
         synchronized (turnLock) {  // Use synchronized block to ensure only one thread runs this section at a time
             if (whiteTurn) {
-                boolean moveMade = aiTurn(); // White player move logic
+                boolean moveMade = playerTakeTurn(); // White player move logic
                 if (!moveMade) {
                     System.out.println("White move failed");
                 }
@@ -324,7 +322,7 @@ public class GameManager extends ScreenAdapter {
                     e.printStackTrace();
                 }
             }
-        }, .5f); // Delay by 1 second
+        }, .5f); // Delay by .5 second
         return true;
     }
 

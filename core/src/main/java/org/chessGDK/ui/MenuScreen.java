@@ -59,12 +59,37 @@ public class MenuScreen implements Screen{
 
         selectBox = new SelectBox<>(skin);
         table.add(selectBox);
-        selectBox.setItems("Level 1", "Level 2", "Level 3");
+        selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
+        System.out.println("Default Difficulty Novice set - ELO: 800");
 
         selectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                String selectedLevel = selectBox.getSelected();
+                int difficulty;
 
+                switch (selectedLevel){
+                    case "Novice":
+                        difficulty = 0;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Novice set - ELO: 800");
+                        break;
+                    case "Intermediate":
+                        difficulty = 2;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Intermediate set - ELO: 1200");
+                        break;
+                    case "Expert":
+                        difficulty = 5;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Expert set - ELO: 1600");
+                        break;
+                    case "Master":
+                        difficulty = 9;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Master set - ELO: 2000");
+                        break;
+                }
             }
         });
 
