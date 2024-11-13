@@ -41,7 +41,7 @@ classDiagram
        + exitGame() void
    
    }
-    GameManager "1" o-- "1" StockfishAI : is part of
+    GameManager "1" o-- "1" StockFishAI : is part of
 
 
 ```
