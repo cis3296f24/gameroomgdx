@@ -34,6 +34,7 @@ public class ChessBoardScreen implements Screen {
     private Texture boardTexture;
     private static final int TILE_SIZE = Gdx.graphics.getWidth()/8;
     private Piece[][] board;
+    private Blank[][] possibilities;
     private GameManager gm;
     private ScreenManager sm;
     private Stage stage;
@@ -86,15 +87,19 @@ public class ChessBoardScreen implements Screen {
         boardTexture = new Texture("blue3.jpg");
         this.gm = gm;
         board = gm.getBoard();
+        possibilities = gm.getPossibilities();
         // Pieces load textures when created, placing them displays them
         for(int i = 0; i < board.length; i++) {
             for(int j = 0; j < board[i].length; j++) {
                 Piece piece = board[i][j];
+                Blank b = possibilities[i][j];
+                b.setPosition(j*TILE_SIZE, i*TILE_SIZE);
                 if (piece != null) {
                     piece.setPosition(j*TILE_SIZE, i*TILE_SIZE);
                 }
             }
         }
+
 
     }
 
@@ -165,6 +170,8 @@ public class ChessBoardScreen implements Screen {
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 Piece piece = board[i][j];
+                Blank b = possibilities[i][j];
+                batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE - 5);
                 if (piece == null || piece.isAnimating()) continue;
                 batch.draw(piece.getTexture(), piece.getXPos(), piece.getYPos(), TILE_SIZE, TILE_SIZE - 5);
             }
@@ -173,12 +180,13 @@ public class ChessBoardScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        stage.dispose();
+        skin.dispose();
     }
 
     @Override
     public void show() {
-        PieceInputHandler inputHandler = new PieceInputHandler(gm, camera, board, TILE_SIZE);
+        PieceInputHandler inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
         Gdx.input.setInputProcessor(inputHandler);
     }
 
