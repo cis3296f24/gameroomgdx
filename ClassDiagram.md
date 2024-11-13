@@ -164,6 +164,18 @@ classDiagram
     Pawn <-- Piece: Extends
     Queen <-- Piece: Extends
     Rook <-- Piece: Extends
-
+    class Blank{
+      - pieceTexture: Textue
+      - xPos: float
+      - yPos: float
+      
+      + Blank()
+      + getTexture() Texture
+      + setTexture(texture : Texture) Boolean
+      + getXPos() float
+      + getYPos() float
+      + setPosition(x : float, y : float) void
+    
+    }
 
 ```
