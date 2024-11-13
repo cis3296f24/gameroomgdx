@@ -113,12 +113,13 @@ public class MenuScreen implements Screen {
         button.getLabel().setFontScale(FONT_SCALE);
         button.setColor(BUTTON_COLOR);
 
-        // Show tooltip on hover
+        // Show tooltip on hover and position it intelligently
         button.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 tooltipLabel.setText(tooltipText);
                 tooltipLabel.setVisible(true);
+                positionTooltip(button);
             }
 
             @Override
@@ -135,6 +136,21 @@ public class MenuScreen implements Screen {
         return button;
     }
 
+    private void positionTooltip(Actor button) {
+        float tooltipX = button.getX() + button.getWidth() + 10; // Position to the right of the button
+        float tooltipY = button.getY() + button.getHeight() / 2; // Center vertically with the button
+
+        // Check if tooltip goes out of screen bounds, adjust if necessary
+        if (tooltipX + tooltipLabel.getWidth() > Gdx.graphics.getWidth()) {
+            // Place tooltip above the button if it goes off the right edge
+            tooltipX = button.getX();
+            tooltipY = button.getY() + button.getHeight() + 10;
+        }
+
+        // Update the tooltip label position
+        tooltipLabel.setPosition(tooltipX, tooltipY);
+    }
+
     @Override
     public void show() {}
 
@@ -142,11 +158,6 @@ public class MenuScreen implements Screen {
     public void render(float delta) {
         // Clear the screen with a background color
         ScreenUtils.clear(0.1f, 0.1f, 0.1f, 1);
-
-        // Update tooltip position based on the mouse
-        if (tooltipLabel.isVisible()) {
-            tooltipLabel.setPosition(Gdx.input.getX() + 10, Gdx.graphics.getHeight() - Gdx.input.getY() - 10);
-        }
 
         stage.act(delta);
         stage.draw();
