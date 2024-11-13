@@ -53,7 +53,7 @@ public class ChessBoardScreen implements Screen {
         camera = new OrthographicCamera(); // Initialize the camera
         camera.setToOrtho(false, 800, 800); // Set the viewport size
         this.sm = sm;
-        
+
         // Initialize the Stage and Skin for Buttons (not in use)
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage); // Set the stage to handle input
@@ -107,9 +107,9 @@ public class ChessBoardScreen implements Screen {
         if (piece == null)
             return false;
         String texturePath = "Chess_" +
-            piece.toString() +
-            (piece.isWhite() ? "l" : "d") +
-            "t100.png";
+                piece.toString() +
+                (piece.isWhite() ? "l" : "d") +
+                "t100.png";
         Texture texture = new Texture(Gdx.files.internal(texturePath));
         piece.setTexture(texture);
         return true;
@@ -171,7 +171,7 @@ public class ChessBoardScreen implements Screen {
             for (int j = 0; j < board[i].length; j++) {
                 Piece piece = board[i][j];
                 Blank b = possibilities[i][j];
-                batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE - 5);
+                batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE);
                 if (piece == null || piece.isAnimating()) continue;
                 batch.draw(piece.getTexture(), piece.getXPos(), piece.getYPos(), TILE_SIZE, TILE_SIZE - 5);
             }

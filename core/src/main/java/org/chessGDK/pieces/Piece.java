@@ -10,7 +10,6 @@ public abstract class Piece {
     private boolean animating;
     private float xPos;
     private float yPos;
-
     public Piece(boolean isWhite) {
         this.isWhite = isWhite;
         String texturePath = "Chess_" +
@@ -43,7 +42,6 @@ public abstract class Piece {
     public boolean isAnimating() {
         return animating;
     }
-
     public void toggleAnimating() {
         animating = !animating;
     }
