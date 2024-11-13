@@ -217,5 +217,17 @@ classDiagram
     ChessBoardScreen o-- ScreenManager
     ChessBoardScreen o-- Piece
     ChessBoardScreen o-- Blank
+    ChessBoardScreen o-- PieceAnimation
+    class PieceAnimation{
+        - ANIMATION_DURATION : float = .2f
+        - piece : Piece
+        - startPosition : Vector2
+        - targetPosition : Vector2
+        
+        + PieceAnimation(piece : Piece, startPosition : Vector 2, targetPosition : Vector2)
+        + isDone() Boolean
+        + update(delta : float) void
+    
+    }
 
 ```
