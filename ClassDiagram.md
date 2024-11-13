@@ -101,4 +101,27 @@ classDiagram
     }
     
     InputAdapter <-- PieceInputHandler: Extends
+    class _Piece_{
+        - isWhite: Boolean
+        - pieceTexture: Textue
+        - animating: Boolean
+        - xPos: float
+        - yPos: float
+        
+        + Piece(isWhite : Boolean)
+        + isWhite() : Boolean
+        + isValidMove(startX : int, startY : int, endX : int, endY : int, board : Piece[][]) Boolean
+        + hasMoved() Boolean
+        + getTexture() Texture
+        + setTexture(texture : Texture) Boolean
+        + isAnimating() Boolean
+        + toggleAnimating() void
+        + getXPos() float
+        + getYPos() float
+        + setPosition(x : float, y : float) void
+        + enPassant() Boolean
+    
+    }
+    Bishop <-- Piece: Extends
+
 ```
