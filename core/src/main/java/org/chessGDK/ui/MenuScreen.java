@@ -2,6 +2,7 @@ package org.chessGDK.ui;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -16,10 +17,17 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class MenuScreen implements Screen {
+    private static final int BUTTON_WIDTH = 250;
+    private static final int BUTTON_HEIGHT = 60;
+    private static final float FONT_SCALE = 1.2f;
+    private static final Color BUTTON_COLOR = new Color(0.2f, 0.6f, 1f, 1); // Light blue
+    private static final Color HOVER_COLOR = new Color(0.3f, 0.7f, 1f, 1);  // Slightly lighter blue on hover
+
     private ScreenManager screenManager;
     private Stage stage;
     private Skin skin;
     private SelectBox<String> selectBox;
+    private Label tooltipLabel;
 
     public MenuScreen(ScreenManager screenManager) {
         this.screenManager = screenManager;
@@ -31,19 +39,24 @@ public class MenuScreen implements Screen {
     }
 
     private void createMenuButtons() {
-        // Use a table layout for alignment and styling
         Table table = new Table();
         table.setFillParent(true);
-        table.center(); // Center the table on the screen
+        table.center();
         stage.addActor(table);
 
-        // Add padding and spacing for the table and elements
-        table.padTop(50); // Space from the top of the screen
-        table.defaults().pad(10).width(250).height(60); // Default padding and button size
+        // Tooltip label (hidden by default)
+        tooltipLabel = new Label("", skin);
+        tooltipLabel.setColor(Color.GRAY);
+        tooltipLabel.setVisible(false);
+        stage.addActor(tooltipLabel);
+
+        // Style setup for buttons
+        TextButton.TextButtonStyle buttonStyle = skin.get(TextButton.TextButtonStyle.class);
+        buttonStyle.fontColor = Color.WHITE;
+        buttonStyle.overFontColor = HOVER_COLOR;
 
         // Singleplayer Button
-        TextButton singleplayerButton = new TextButton("Singleplayer", skin);
-        singleplayerButton.getLabel().setFontScale(1.2f); // Increase font size
+        TextButton singleplayerButton = createMenuButton("Singleplayer", "Start a game against AI");
         singleplayerButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 screenManager.playChess();
@@ -58,15 +71,14 @@ public class MenuScreen implements Screen {
         selectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                // Handle level selection if needed
+                tooltipLabel.setText("Difficulty: " + selectBox.getSelected());
             }
         });
         table.add(selectBox).padBottom(15);
         table.row();
 
         // Multiplayer Button
-        TextButton multiplayerButton = new TextButton("Multiplayer", skin);
-        multiplayerButton.getLabel().setFontScale(1.2f);
+        TextButton multiplayerButton = createMenuButton("Multiplayer", "Play against another player");
         multiplayerButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 screenManager.playChess();
@@ -76,8 +88,7 @@ public class MenuScreen implements Screen {
         table.row();
 
         // Puzzle Button
-        TextButton puzzleButton = new TextButton("Puzzle", skin);
-        puzzleButton.getLabel().setFontScale(1.2f);
+        TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles");
         puzzleButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 screenManager.playChess();
@@ -87,8 +98,7 @@ public class MenuScreen implements Screen {
         table.row();
 
         // Exit Button
-        TextButton exitButton = new TextButton("Exit", skin);
-        exitButton.getLabel().setFontScale(1.2f);
+        TextButton exitButton = createMenuButton("Exit", "Close the application");
         exitButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.exit();
@@ -97,15 +107,47 @@ public class MenuScreen implements Screen {
         table.add(exitButton).fillX().padBottom(15);
     }
 
+    private TextButton createMenuButton(String text, String tooltipText) {
+        TextButton button = new TextButton(text, skin);
+        button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+        button.getLabel().setFontScale(FONT_SCALE);
+        button.setColor(BUTTON_COLOR);
+
+        // Show tooltip on hover
+        button.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                tooltipLabel.setText(tooltipText);
+                tooltipLabel.setVisible(true);
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                tooltipLabel.setVisible(false);
+            }
+
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // Any additional functionality on click
+            }
+        });
+
+        return button;
+    }
+
     @Override
     public void show() {}
 
     @Override
     public void render(float delta) {
         // Clear the screen with a background color
-        ScreenUtils.clear(0.1f, 0.1f, 0.1f, 1); // Dark gray background
+        ScreenUtils.clear(0.1f, 0.1f, 0.1f, 1);
 
-        // Draw the stage elements
+        // Update tooltip position based on the mouse
+        if (tooltipLabel.isVisible()) {
+            tooltipLabel.setPosition(Gdx.input.getX() + 10, Gdx.graphics.getHeight() - Gdx.input.getY() - 10);
+        }
+
         stage.act(delta);
         stage.draw();
     }
