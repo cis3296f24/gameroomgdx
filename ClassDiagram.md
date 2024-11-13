@@ -49,9 +49,9 @@ classDiagram
         - gm: GameManager
         - chessBoardScreen: ChessBoardScreen
         
-        + playChess(): void
-        + render(): void
-        + dispose(): void
+        + playChess() void
+        + render() void
+        + dispose() void
     }
     
     class Game{
@@ -59,5 +59,17 @@ classDiagram
     }
     
     Game <-- ScreenManager: Extends
+    
+    class PieceAnimation{
+        - ANIMATION_DURATION: float$
+        + piece: Piece
+        + startPosition: Vector2
+        + targetPosition: Vector2
+        + elapsedTime: float
+        
+        + PieceAnimation(piece: Piece, startPosition: Vector2 , targetPosition: Vector2)
+        + isDone: Boolean
+        + update(delta: float)
+    }
 
 ```
