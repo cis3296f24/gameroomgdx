@@ -21,18 +21,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-
-/** First screen of the application. Displayed after the application is created. */
 public class ChessBoardScreen implements Screen {
     private final SpriteBatch batch;
-    /*
-    private Texture whitePawnTexture, blackPawnTexture, whiteRookTexture, blackRookTexture,
-                    whiteKnightTexture, blackKnightTexture, whiteBishopTexture, blackBishopTexture,
-                    whiteQueenTexture, blackQueenTexture, whiteKingTexture, blackKingTexture;
-
-     */
     private Texture boardTexture;
-    private static final int TILE_SIZE = Gdx.graphics.getWidth()/8;
+    private static final int TILE_SIZE = Gdx.graphics.getWidth() / 8;
     private Piece[][] board;
     private Blank[][] possibilities;
     private GameManager gm;
@@ -40,47 +32,78 @@ public class ChessBoardScreen implements Screen {
     private Stage stage;
     private Skin skin;
 
-    // Variables for piece movement animation
     private Vector2 startPosition, targetPosition, currentPosition;
     private Piece animatedPiece;
-    private float elapsedTime = 0f;  // Time passed since animation started
-    private float totalTime = .2f;    // Total time to complete the animation (e.g., 2 seconds)
+    private float elapsedTime = 0f;
+    private float totalTime = .2f;
     private final Array<PieceAnimation> activeAnimations = new Array<>();
     private OrthographicCamera camera;
 
     public ChessBoardScreen(ScreenManager sm) {
         batch = new SpriteBatch();
-        camera = new OrthographicCamera(); // Initialize the camera
-        camera.setToOrtho(false, 800, 800); // Set the viewport size
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 800, 800);
         this.sm = sm;
 
-        // Initialize the Stage and Skin for Buttons (not in use)
         stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(stage); // Set the stage to handle input
-        skin = new Skin(Gdx.files.internal("uiskin.json")); // Load your skin file
+        Gdx.input.setInputProcessor(stage);
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
 
+        addControlButtons(); // Add control buttons here
     }
 
-    public void addButtons(GameManager gm) {
-        // Create the button
-        TextButton aiTurnButton = new TextButton("Take your Turn", skin);
-        aiTurnButton.setPosition(10, 10); // Set position of the button
-        aiTurnButton.setSize(200, 50);    // Set size of the button
-        // Add a ClickListener to the button
-        aiTurnButton.addListener(new ClickListener() {
+    public void addControlButtons() {
+        // Resize Button
+        TextButton resizeButton = new TextButton("Resize", skin);
+        resizeButton.setPosition(10, 70);
+        resizeButton.setSize(200, 50);
+        resizeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-
-                System.out.println("AI Turn Button Clicked");
-                // Call AI move logic here
-                boolean went = gm.aiTurn();
-                if (!went)
-                    System.out.println("aiTakeTurn(): " + went);
+                System.out.println("Resize Button Clicked");
+                resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             }
         });
+        stage.addActor(resizeButton);
 
-        // Add the button to the stage
-        stage.addActor(aiTurnButton);
+        // Pause Button
+        TextButton pauseButton = new TextButton("Pause", skin);
+        pauseButton.setPosition(10, 130);
+        pauseButton.setSize(200, 50);
+        pauseButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Pause Button Clicked");
+                pause();
+            }
+        });
+        stage.addActor(pauseButton);
+
+        // Resume Button
+        TextButton resumeButton = new TextButton("Resume", skin);
+        resumeButton.setPosition(10, 190);
+        resumeButton.setSize(200, 50);
+        resumeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Resume Button Clicked");
+                resume();
+            }
+        });
+        stage.addActor(resumeButton);
+
+        // Hide Button
+        TextButton hideButton = new TextButton("Hide", skin);
+        hideButton.setPosition(10, 250);
+        hideButton.setSize(200, 50);
+        hideButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("Hide Button Clicked");
+                hide();
+            }
+        });
+        stage.addActor(hideButton);
     }
 
     public void loadTextures(GameManager gm) {
@@ -88,19 +111,16 @@ public class ChessBoardScreen implements Screen {
         this.gm = gm;
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
-        // Pieces load textures when created, placing them displays them
-        for(int i = 0; i < board.length; i++) {
-            for(int j = 0; j < board[i].length; j++) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
                 Piece piece = board[i][j];
                 Blank b = possibilities[i][j];
-                b.setPosition(j*TILE_SIZE, i*TILE_SIZE);
+                b.setPosition(j * TILE_SIZE, i * TILE_SIZE);
                 if (piece != null) {
-                    piece.setPosition(j*TILE_SIZE, i*TILE_SIZE);
+                    piece.setPosition(j * TILE_SIZE, i * TILE_SIZE);
                 }
             }
         }
-
-
     }
 
     private boolean applyTexture(Piece piece) {
@@ -117,32 +137,21 @@ public class ChessBoardScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Clear the screen with a solid color (black, in this case)
-        Gdx.gl.glClearColor(1, 1, 1, 1); // Clear to white
+        Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Begin drawing
         batch.begin();
-        // Draw the chessboard (you can later add pieces and other elements)
         batch.draw(boardTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        /*
-        if (animatedPiece != null && animatedPiece.isAnimating())
-            animatePiece(delta);
-
-         */
         updateAnimations(delta);
         drawPieces();
 
-
         batch.end();
 
-        // Update and draw the stage (which contains the button)
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
     }
 
-    // Method to start the animation
     public void startPieceAnimation(Piece piece, int startX, int startY, int endX, int endY) {
         animatedPiece = piece;
         startPosition = new Vector2(startX * TILE_SIZE, startY * TILE_SIZE);
@@ -152,19 +161,16 @@ public class ChessBoardScreen implements Screen {
 
     public void updateAnimations(float delta) {
         for (PieceAnimation animation : activeAnimations) {
-            animation.update(delta);  // Delta is passed to ensure frame-rate independence
-
-            // Draw the animated piece
+            animation.update(delta);
             Texture pieceTexture = animation.piece.getTexture();
             batch.draw(pieceTexture, animation.startPosition.x, animation.startPosition.y, TILE_SIZE, TILE_SIZE - 5);
 
             if (animation.isDone()) {
                 animation.piece.toggleAnimating();
-                activeAnimations.removeValue(animation, true); // Remove the animation if done
+                activeAnimations.removeValue(animation, true);
             }
         }
     }
-
 
     private void drawPieces() {
         for (int i = 0; i < board.length; i++) {
@@ -192,21 +198,21 @@ public class ChessBoardScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // Resize your screen here. The parameters represent the new window size.
+        System.out.println("Screen resized to: " + width + "x" + height);
     }
 
     @Override
     public void pause() {
-        // Invoked when your application is paused.
+        System.out.println("Game paused");
     }
 
     @Override
     public void resume() {
-        // Invoked when your application is resumed after pause.
+        System.out.println("Game resumed");
     }
 
     @Override
     public void hide() {
-        // This method is called when another screen replaces this one.
+        System.out.println("Screen hidden");
     }
 }
