@@ -3,45 +3,61 @@
 ```mermaid 
 classDiagram
     class StockFishAI{
-        - Process stockfishProcess
-        - BufferedReader inputReader
-        - OutputStream outputStream
-        - int depth
-        + StockfishAI(int depth)
+        - STOCKFISHPROCESS: Process
+        - INPUTREADER: BufferedReader
+        - OUTPUTSTREAM: OutputStream
+        - DEPTH: int
+        + StockfishAI(depth: int)
         + close() void
-        + getBestMove(String fen) String
+        + getBestMove(fen: String) String
     }
-      class GameManager{
-       - Object turnLock = new Object();
-       - boolean whiteTurn;
-       - Piece[][] board;
-       - Blank[][] possibilities;
-       -  Piece[] castlingPieces;
-       - StockfishAI stockfishAI;
-       - int DEPTH = 1;
-       - int halfMoves;
-       - String castlingRights;
-       - String enPassantSquare;
+    
+    class GameManager{
+       - TURNLOCK : Object 
+       - whiteTurn: boolean 
+       - BOARD: Piece[][] 
+       - POSSIBILITIES: Blank[][]
+       - CASTLINGPIECES: Piece[] 
+       - STOCKFISHAI: StockfishAI 
+       - DEPTH : int
+       - halfMoves : int
+       - castlingRights : String
+       - enPassantSquare: String
        + GameManager()
-       + movePiece(String move) boolean
-       + parseMove(String bestMove) char[]
-       + promote(char rank, int endRow, int endCol) boolean
+       - setupPieces()
+       + movePiece(move: String) boolean
+       + parseMove(bestMove: String) char[]$
+       + promote(rank: char, endRow: int, endCol: int) boolean
        + generateFen() String
        + makeNextMove() void
        + playerTakeTurn() boolean
        + aiTakeTurn() boolean
        + aiTurn() boolean
-       + getBestMove(String fen) String
+       + getBestMove(fen: String) String
        + getAI() StockfishAI
        + isWhiteTurn() boolean
        + getBoard() Piece[][]
        + getPossibilities() Blank[][]
        + printBoard() void
-       + render(float delta) void
+       + render(delta: float) void
        + exitGame() void
    
    }
-    GameManager "1" o-- "1" StockFishAI : is part of
-
+    GameManager  o--  StockFishAI
+    
+    class ScreenManager{
+        - gm: GameManager
+        - chessBoardScreen: ChessBoardScreen
+        
+        + playChess(): void
+        + render(): void
+        + dispose(): void
+    }
+    
+    class Game{
+        
+    }
+    
+    Game <-- ScreenManager: Extends
 
 ```
