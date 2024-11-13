@@ -13,11 +13,11 @@ public class StockfishAI {
     private final BufferedReader inputReader;
     private final OutputStream outputStream;
     private final int depth;
+    private int difficulty = 0;
 
-    public StockfishAI(int depth) throws IOException {
+    public StockfishAI(int depth, int difficulty) throws IOException {
         String rootPath = System.getProperty("root.path");
         System.out.println(rootPath);
-
         if (rootPath == null) {
             try {
                 // Locate and open the manifest file in the JAR
@@ -36,28 +36,77 @@ public class StockfishAI {
                 e.printStackTrace();
             }
         }
-        
+
         FileHandle stockfishHandle = Gdx.files.internal(rootPath + "/assets/stockfish/stockfish-windows-x86-64-avx2.exe");
         ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.file().getAbsolutePath());
         this.depth = depth;
+        this.difficulty = difficulty;
         stockfishProcess = processBuilder.start();
         inputReader = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));
         outputStream = stockfishProcess.getOutputStream();
-        outputStream.write("uci\n".getBytes());
-        outputStream.flush();
-        // Read and print Stockfish's response
-        String line;
-        while ((line = inputReader.readLine()) != null) {
-            System.out.println("Stockfish: " + line);
-            if (line.equals("uciok")) {
-                System.out.println("Stockfish: " + line);
-                break;  // Stop reading when Stockfish signals that it is ready
-            }
-        }
+        sendCommand("uci\n");
+        sendDifficulty();
+        readInfo();
 
         System.out.println("Stockfish: Universal Chess Interface - initialized");
 
         // Close streams and process when done
+    }
+
+    // Send a command to Stockfish as a newline terminated string
+    private void sendCommand(String command) throws IOException {
+        outputStream.write((command).getBytes());
+        outputStream.flush();
+    }
+
+    private void readInfo() throws IOException {
+        String line;
+        while ((line = inputReader.readLine()) != null) {
+            System.out.println(line); // Print or process each line as needed
+            if (line.equals("uciok") || line.equals("readyok")) {
+                System.out.println("Stockfish: " + line);
+                break; // Break the loop on specific end markers or responses
+            }
+        }
+    }
+
+    private void sendDifficulty() throws IOException {
+        String command = "setoption name Skill Level value " + difficulty + "\n";
+        System.out.println("command sent: " + command);
+        sendCommand(command);
+    }
+
+    private String[] readMove() throws IOException {
+        String[] moves = {"", ""};
+        String line;
+        while ((line = inputReader.readLine()) != null) {
+            if (line.startsWith("bestmove")) {
+                moves[0] = line.split(" ")[1];  // Extract the move from the response
+                moves[1] = line.split(" ")[3];
+                break;
+            }
+        }
+        return moves;
+    }
+
+    public String getBestMove(String fen) throws IOException {
+        // Send the position in FEN format
+        String toSend = "position startpos\n";
+        if (!fen.isEmpty())
+            toSend = "position fen " + fen + "\n";
+        sendCommand(toSend);
+        // Request the best move
+        toSend = "go movetime 50\n";
+        sendCommand(toSend);
+
+        String[] moves = readMove();
+        String bestMove = moves[0];
+        String ponder = moves[1];
+
+        System.out.println("BestMove: " + bestMove + "\nPonder: " + ponder);
+
+        // Read the response until we find the best move
+        return bestMove;  // Return the best move found
     }
 
     public void close() throws IOException {
@@ -76,38 +125,4 @@ public class StockfishAI {
             e.printStackTrace();
         }
     }
-
-
-
-    public String getBestMove(String fen) throws IOException {
-        // Send the position in FEN format
-        String toSend = "position startpos\n";
-        if (!fen.isEmpty())
-            toSend = "position fen " + fen + "\n";
-
-        outputStream.write(toSend.getBytes());
-        outputStream.flush();
-
-        // Request the best move
-        toSend = "go depth " + depth + "\n";
-        outputStream.write(toSend.getBytes());
-        outputStream.flush();
-
-        // Read the response until we find the best move
-        String bestMove = null;
-        String line;
-        while ((line = inputReader.readLine()) != null) {
-          //  System.out.println("Stockfish: " + line);
-            if (line.startsWith("bestmove")) {
-                bestMove = line.split(" ")[1];  // Extract the move from the response
-                break;
-            }
-        }
-
-        return bestMove;  // Return the best move found
-    }
-
-
-
-
 }
