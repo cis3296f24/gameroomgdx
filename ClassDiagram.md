@@ -229,5 +229,13 @@ classDiagram
         + update(delta : float) void
     
     }
+    class CoordinateUtils{
+        - tileSize : int
+        
+        + coordinateUtils(tileSize: int)
+        + worldtoBoardX(worldX : float) int
+        + worldtoBoardY(worldY : float) int
+
+    }
 
 ```
