@@ -41,7 +41,7 @@ classDiagram
        + exitGame() void
    
    }
-   GameManager "1" -- "1" StockFishAI : uses
+   GameManager "1" --<> "1" StockFishAI : apart
 
 
 ```
