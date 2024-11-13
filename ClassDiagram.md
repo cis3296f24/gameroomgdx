@@ -101,8 +101,9 @@ classDiagram
     }
     
     InputAdapter <-- PieceInputHandler: Extends
-    class _Piece_{
-        - isWhite: Boolean
+    class Piece{
+        <<abstract>>
+        # isWhite: Boolean
         - pieceTexture: Textue
         - animating: Boolean
         - xPos: float
