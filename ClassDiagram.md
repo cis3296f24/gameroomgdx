@@ -177,5 +177,45 @@ classDiagram
       + setPosition(x : float, y : float) void
     
     }
+    class ChessBoardScreen{
+        - batch : SpriteBatch
+        - boardTexture : Texture
+        - TILE_SIZE : int
+        - board : Piece[][]
+        - possibilities : Blank[][]
+        - gm : GameManager
+        - sm : ScreenManager
+        - stage : Stage
+        - skin : Skin
+        - startPosition : Vector2
+        - targetPosition : Vector2
+        - currentPosition : Vector2
+        - animatedPiece : Piece
+        - elapsedTime : float
+        - totalTime : float
+        - activeAnimations : Array<PieceAnimation>
+        - camera : OrthographicCamera
+
+        + ChessBoardScreen(sm : ScreenManager)
+        + addButtons(gm : GameManager) void
+        + loadTextures(gm : GameManager) void
+        - applyTexture(piece : Piece) boolean
+        + render(delta : float) void
+        + startPieceAnimation(piece : Piece, startX : int, startY : int, endX : int, endY : int) void
+        + updateAnimations(delta : float) void
+        - drawPieces() void
+        + dispose() void
+        + show() void
+        + resize(width : int, height : int) void
+        + pause() void
+        + resume() void
+        + hide() void
+    
+    }
+    ChessBoardScreen ..|> Screen : implements
+    ChessBoardScreen o-- GameManager
+    ChessBoardScreen o-- ScreenManager
+    ChessBoardScreen o-- Piece
+    ChessBoardScreen o-- Blank
 
 ```
