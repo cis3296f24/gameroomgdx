@@ -71,5 +71,34 @@ classDiagram
         + isDone() Boolean
         + update(delta: float)
     }
-
+    
+    class InputAdapter{
+        
+    }
+    
+    class PieceInputHandler{
+        - selectedPiece: Piece
+        - startPos: Vector2
+        - liftPosition: Vector3
+        - dropPostion: Vector3
+        - firstClick: boolean
+        - isDragging: boolean
+        
+        - GM: GameManager
+        - CAMERA: Camera
+        - BOARD: Piece
+        - POSSIBILITIES: Blank[][]
+        - TILE_SIZE: int
+        
+        - coords: CoordinateUtils
+        
+        + PieceInputHandler(gm: GameManager , camera: Camera, board: Piece[][], p: Blank[][] , tileSize: int)
+        + touchDown(screenX: int, screenY: int, pointer: int, button: int) Boolean
+        + mouseMoved(screenX: int, screenY: int) Boolean
+        - handleLift(screenX: int, screenY: int) void
+        - cancelLift() void
+        - handlePlace(screenX: int, screenY: int) void
+    }
+    
+    InputAdapter <-- PieceInputHandler: Extends
 ```
