@@ -97,6 +97,7 @@ public class StockfishAI {
         String bestMove = null;
         String line;
         while ((line = inputReader.readLine()) != null) {
+          //  System.out.println("Stockfish: " + line);
             if (line.startsWith("bestmove")) {
                 bestMove = line.split(" ")[1];  // Extract the move from the response
                 break;
@@ -105,4 +106,8 @@ public class StockfishAI {
 
         return bestMove;  // Return the best move found
     }
+
+
+
+
 }

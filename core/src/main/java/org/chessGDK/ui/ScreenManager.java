@@ -28,7 +28,7 @@ public class ScreenManager extends Game {
         this.setScreen(menuScreen);
     }
 
-    // Add other methods to manage game state, screens, etc.    
+    // Add other methods to manage game state, screens, etc.
     public void playChess() {
         try {
             gm = new GameManager();
@@ -43,7 +43,7 @@ public class ScreenManager extends Game {
         // Set the screen to Chess
         this.setScreen(chessBoardScreen);
     }
-    
+
 
     @Override
     public void render() {
@@ -58,4 +58,3 @@ public class ScreenManager extends Game {
 
     // Add other methods to manage game state, screens, etc.
 }
-

@@ -41,26 +41,26 @@ public class PieceInputHandler extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-            // Convert screen coordinates to world coordinates
-            if (button == Input.Buttons.LEFT) {
-                Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
-                camera.unproject(worldCoordinates); // Convert to world coordinates
-                if (firstClick) {
-                    liftPositon.set(worldCoordinates); // Store the first click position
-                    handleLift(screenX, screenY);
-                } else {
-                    dropPosition.set(worldCoordinates); // Store the second click position
-                    handlePlace(screenX, screenY);
-                    isDragging = false;
-                }
-                return true;
+        // Convert screen coordinates to world coordinates
+        if (button == Input.Buttons.LEFT) {
+            Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
+            camera.unproject(worldCoordinates); // Convert to world coordinates
+            if (firstClick) {
+                liftPositon.set(worldCoordinates); // Store the first click position
+                handleLift(screenX, screenY);
+            } else {
+                dropPosition.set(worldCoordinates); // Store the second click position
+                handlePlace(screenX, screenY);
+                isDragging = false;
             }
-            if (button == Input.Buttons.RIGHT && isDragging) {
-                cancelLift();
-                return true;
-            }
-            return false;
+            return true;
         }
+        if (button == Input.Buttons.RIGHT && isDragging) {
+            cancelLift();
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
@@ -108,7 +108,7 @@ public class PieceInputHandler extends InputAdapter {
 
     private void cancelLift() {
         selectedPiece.setPosition(coords.worldToBoardX(liftPositon.x) * TILE_SIZE,
-                                coords.worldToBoardY(liftPositon.y) * TILE_SIZE);
+                coords.worldToBoardY(liftPositon.y) * TILE_SIZE);
         System.out.println("Move cancelled");
         firstClick = true;
         isDragging = false;
@@ -131,9 +131,9 @@ public class PieceInputHandler extends InputAdapter {
         placeX += 'a';
         placeY += '1';
         String move = String.valueOf((char) startPos.x) +
-            (char) startPos.y +
-            (char) placeX +
-            (char) placeY;
+                (char) startPos.y +
+                (char) placeX +
+                (char) placeY;
         if (gm.movePiece(move)) {
             System.out.println("Placed piece at: " + (char) placeX + ", " + (char) placeY);
             placeX -= 'a';
