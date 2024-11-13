@@ -14,7 +14,8 @@ public class ScreenManager extends Game {
     private ChessBoardScreen chessBoardScreen;
     private MenuScreen menuScreen;
 
-
+    // Variable for AI difficulty level
+    private int difficulty = 0;
 
     @Override
     public void create() {
@@ -28,10 +29,14 @@ public class ScreenManager extends Game {
         this.setScreen(menuScreen);
     }
 
-    // Add other methods to manage game state, screens, etc.
+    public void setDifficulty(int difficulty){
+        this.difficulty = difficulty;
+    }
+
+    // Add other methods to manage game state, screens, etc.    
     public void playChess() {
         try {
-            gm = new GameManager();
+            gm = new GameManager(difficulty);
             chessBoardScreen = new ChessBoardScreen(this);
             chessBoardScreen.loadTextures(gm);
             //chessBoardScreen.addButtons(gm);

@@ -1,81 +1,74 @@
 package org.chessGDK.ui;
 
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import org.chessGDK.logic.GameManager;
+import org.chessGDK.pieces.*;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class MenuScreen implements Screen {
-    private static final int BUTTON_WIDTH = 250;
-    private static final int BUTTON_HEIGHT = 60;
-    private static final float FONT_SCALE = 1.2f;
-    private static final Color BUTTON_COLOR = new Color(0.2f, 0.6f, 1f, 1); // Light blue
-    private static final Color HOVER_COLOR = new Color(0.3f, 0.7f, 1f, 1);  // Slightly lighter blue on hover
+import static com.badlogic.gdx.Gdx.input;
 
+public class MenuScreen implements Screen{
     private ScreenManager screenManager;
     private Stage stage;
     private Skin skin;
     private SelectBox<String> selectBox;
-    private Label tooltipLabel;
 
-    public MenuScreen(ScreenManager screenManager) {
+
+    public MenuScreen(ScreenManager screenManager){
         this.screenManager = screenManager;
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
-        Gdx.input.setInputProcessor(stage);
+        input.setInputProcessor(stage);
 
         createMenuButtons();
     }
 
-    private void createMenuButtons() {
+    private void createMenuButtons(){
+        //using tables for layout
         Table table = new Table();
         table.setFillParent(true);
-        table.center();
         stage.addActor(table);
 
-        // Tooltip label (hidden by default)
-        tooltipLabel = new Label("", skin);
-        tooltipLabel.setColor(Color.GRAY);
-        tooltipLabel.setVisible(false);
-        stage.addActor(tooltipLabel);
-
-        // Style setup for buttons
-        TextButton.TextButtonStyle buttonStyle = skin.get(TextButton.TextButtonStyle.class);
-        buttonStyle.fontColor = Color.WHITE;
-        buttonStyle.overFontColor = HOVER_COLOR;
-
-        // Singleplayer Button
-        TextButton singleplayerButton = createMenuButton("Singleplayer", "Start a game against AI");
-        singleplayerButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
+        TextButton Singleplayer = new TextButton("Singleplayer", skin);
+        table.add(Singleplayer);
+        Singleplayer.addListener(new ClickListener(){
+            public void clicked (InputEvent event, float x, float y){
                 screenManager.playChess();
             }
         });
-        table.add(singleplayerButton).fillX().padBottom(15);
-        table.row();
 
-        // Difficulty Level SelectBox
         selectBox = new SelectBox<>(skin);
+        table.add(selectBox);
         selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
         System.out.println("Default Difficulty Novice set - ELO: 800");
+
         selectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 String selectedLevel = selectBox.getSelected();
                 int difficulty;
 
-                switch (selectedLevel) {
+                switch (selectedLevel){
                     case "Novice":
                         difficulty = 0;
                         screenManager.setDifficulty(difficulty);
@@ -99,90 +92,47 @@ public class MenuScreen implements Screen {
                 }
             }
         });
-        table.add(selectBox).padBottom(15);
+
         table.row();
 
-        // Multiplayer Button
-        TextButton multiplayerButton = createMenuButton("Multiplayer", "Play against another player");
-        multiplayerButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
+        TextButton Multiplayer = new TextButton("Multiplayer", skin);
+        table.add(Multiplayer);
+        Multiplayer.addListener(new ClickListener(){
+            public void clicked (InputEvent event, float x, float y){
                 screenManager.playChess();
             }
         });
-        table.add(multiplayerButton).fillX().padBottom(15);
+
         table.row();
 
-        // Puzzle Button
-        TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles");
-        puzzleButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
+        TextButton Puzzle = new TextButton("Puzzle", skin);
+        table.add(Puzzle);
+        Puzzle.addListener(new ClickListener(){
+            public void clicked (InputEvent event, float x, float y){
                 screenManager.playChess();
             }
         });
-        table.add(puzzleButton).fillX().padBottom(15);
+
         table.row();
 
-        // Exit Button
-        TextButton exitButton = createMenuButton("Exit", "Close the application");
-        exitButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
+        TextButton Exit = new TextButton("Exit", skin);
+        table.add(Exit);
+        Exit.addListener(new ClickListener(){
+            public void clicked (InputEvent event, float x, float y){
                 Gdx.app.exit();
             }
         });
-        table.add(exitButton).fillX().padBottom(15);
     }
 
-    private TextButton createMenuButton(String text, String tooltipText) {
-        TextButton button = new TextButton(text, skin);
-        button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
-        button.getLabel().setFontScale(FONT_SCALE);
-        button.setColor(BUTTON_COLOR);
-
-        // Show tooltip on hover and position it intelligently
-        button.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                tooltipLabel.setText(tooltipText);
-                tooltipLabel.setVisible(true);
-                positionTooltip(button);
-            }
-
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                tooltipLabel.setVisible(false);
-            }
-
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                // Any additional functionality on click
-            }
-        });
-
-        return button;
-    }
-
-    private void positionTooltip(Actor button) {
-        float tooltipX = button.getX() + button.getWidth() + 10; // Position to the right of the button
-        float tooltipY = button.getY() + button.getHeight() / 2; // Center vertically with the button
-
-        // Check if tooltip goes out of screen bounds, adjust if necessary
-        if (tooltipX + tooltipLabel.getWidth() > Gdx.graphics.getWidth()) {
-            // Place tooltip above the button if it goes off the right edge
-            tooltipX = button.getX();
-            tooltipY = button.getY() + button.getHeight() + 10;
-        }
-
-        // Update the tooltip label position
-        tooltipLabel.setPosition(tooltipX, tooltipY);
-    }
 
     @Override
-    public void show() {}
+    public void show() {
+
+    }
 
     @Override
     public void render(float delta) {
-        // Clear the screen with a background color
-        ScreenUtils.clear(0.1f, 0.1f, 0.1f, 1);
+        ScreenUtils.clear(1,1,1,1,true);
 
         stage.act(delta);
         stage.draw();
@@ -194,13 +144,19 @@ public class MenuScreen implements Screen {
     }
 
     @Override
-    public void pause() {}
+    public void pause() {
+
+    }
 
     @Override
-    public void resume() {}
+    public void resume() {
+
+    }
 
     @Override
-    public void hide() {}
+    public void hide() {
+
+    }
 
     @Override
     public void dispose() {
