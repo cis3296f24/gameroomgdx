@@ -123,6 +123,47 @@ classDiagram
         + enPassant() Boolean
     
     }
+    class Bishop{
+    
+        + isValidMove(startCol : int,startRow : int, endCol : int, endRow : int, board : Piece[][])
+        + toString() String
+    }
+     class King{
+        - moved: Boolean
+        
+        + isValidMove(startCol : int,startRow : int, endCol : int, endRow : int, board : Piece[][])
+        + toString() String
+        + hasMoved() Boolean
+    }
+     class Knight{
+        + isValidMove(startCol : int,startRow : int, endCol : int, endRow : int, board : Piece[][])
+        + toString() String
+    }
+     class Pawn{
+       - enPassant: Boolean
+       
+       + isValidMove(startCol : int,startRow : int, endCol : int, endRow : int, board : Piece[][])
+       + toString() String
+       + enPassant() Boolean
+    }
+     class Queen{
+        + isValidMove(startCol : int,startRow : int, endCol : int, endRow : int, board : Piece[][])
+        + toString() String
+    }
+    class Rook{
+        - moved: Boolean
+        
+        + isValidMove(startCol : int,startRow : int, endCol : int, endRow : int, board : Piece[][])
+        + toString() String
+        + hasMoved() Boolean
+    
+    }
     Bishop <-- Piece: Extends
+    King <-- Piece: Extends
+    Knight <-- Piece: Extends
+    Pawn <-- Piece: Extends
+    Queen <-- Piece: Extends
+    Rook <-- Piece: Extends
+
 
 ```
