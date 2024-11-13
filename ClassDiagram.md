@@ -68,7 +68,7 @@ classDiagram
         + elapsedTime: float
         
         + PieceAnimation(piece: Piece, startPosition: Vector2 , targetPosition: Vector2)
-        + isDone: Boolean
+        + isDone() Boolean
         + update(delta: float)
     }
 
