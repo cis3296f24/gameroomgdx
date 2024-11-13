@@ -1,3 +1,4 @@
+
 package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
@@ -91,6 +92,8 @@ public class GameManager extends ScreenAdapter {
     }
 
     public boolean movePiece(String move) {
+        String fen;
+        fen = generateFen();
         if (move.isEmpty()) {
             return false;
         }
@@ -121,6 +124,10 @@ public class GameManager extends ScreenAdapter {
             }
             //piece.toggleAnimating();
             printBoard();
+
+            checkforcheckmate(fen);
+
+
             whiteTurn = !whiteTurn;
             halfMoves++;
             piece.setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
@@ -147,7 +154,19 @@ public class GameManager extends ScreenAdapter {
         parsed[3] -= '1';
         return parsed;
     }
+    private void checkforcheckmate(String fen) {
+                try {
+                    String bestMove = getBestMove(fen);
+                    //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
+                    if(bestMove.equalsIgnoreCase("(none)")){
+                        System.out.println("checkmate");
+                        exitGame();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
+    }
     private boolean promote(char rank, int endRow, int endCol) {
         return switch (rank) {
             case 'q' -> {
@@ -284,20 +303,23 @@ public class GameManager extends ScreenAdapter {
     public boolean aiTurn() {
         String fen;
         fen = generateFen();
+
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
                 try {
                     // Retrieve the best move from Stockfish after the delay
                     String bestMove = getBestMove(fen);
-                    System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
-                    if (bestMove.equalsIgnoreCase("(none)"))
-                        return;
 
+                    System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
+                    if (bestMove.equalsIgnoreCase("(none)")){
+                        System.out.println("checkmate");
+                        exitGame();
+                        return;}
                     boolean moved = movePiece(bestMove);
                     System.out.println("Move " + bestMove + ": " + moved);
                     //printBoard();
-
+                    checkforcheckmate(generateFen());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -309,6 +331,7 @@ public class GameManager extends ScreenAdapter {
     public String getBestMove(String fen) throws IOException {
         return stockfishAI.getBestMove(fen);
     }
+
 
     public StockfishAI getAI() {
         return stockfishAI;
@@ -358,5 +381,7 @@ public class GameManager extends ScreenAdapter {
         }
         // Perform any other cleanup needed for the game
         System.out.println("Game exited.");
+       // go back to menu
+
     }
 }

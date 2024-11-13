@@ -12,15 +12,23 @@ public class ScreenManager extends Game {
 
     // Create references to different screens
     private ChessBoardScreen chessBoardScreen;
+    private MenuScreen menuScreen;
+
 
 
     @Override
     public void create() {
-        // Start the game by playing chess
-        playChess();
+        // display the menu at the start
+        displayMenu();
+
     }
 
-    // Add other methods to manage game state, screens, etc.    
+    public void displayMenu(){
+        menuScreen = new MenuScreen(this);
+        this.setScreen(menuScreen);
+    }
+
+    // Add other methods to manage game state, screens, etc.
     public void playChess() {
         try {
             gm = new GameManager();
@@ -35,7 +43,7 @@ public class ScreenManager extends Game {
         // Set the screen to Chess
         this.setScreen(chessBoardScreen);
     }
-    
+
 
     @Override
     public void render() {
@@ -45,10 +53,8 @@ public class ScreenManager extends Game {
 
     @Override
     public void dispose() {
-        // Dispose of resources when the game ends
-        chessBoardScreen.dispose();
+
     }
 
     // Add other methods to manage game state, screens, etc.
 }
-
