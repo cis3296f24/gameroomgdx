@@ -2,14 +2,12 @@
 package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
-import org.chessGDK.ui.ChessBoardScreen;
+import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
 
@@ -124,13 +122,10 @@ public class GameManager extends ScreenAdapter {
             }
             //piece.toggleAnimating();
             printBoard();
-
-            checkforcheckmate(fen);
-
-
             whiteTurn = !whiteTurn;
             halfMoves++;
             piece.setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
+            checkforcheckmate(fen);
             makeNextMove();
             return true;
         }
@@ -154,9 +149,8 @@ public class GameManager extends ScreenAdapter {
     }
     private void checkforcheckmate(String fen) {
                 try {
-                    String bestMove = getBestMove(fen);
                     //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if(bestMove.equalsIgnoreCase("(none)")){
+                    if(stockfishAI.checkmate(fen)){
                         System.out.println("checkmate");
                         exitGame();
                     }
@@ -165,22 +159,27 @@ public class GameManager extends ScreenAdapter {
                 }
 
     }
+    
     private boolean promote(char rank, int endRow, int endCol) {
         return switch (rank) {
             case 'q' -> {
                 board[endRow][endCol] = new Queen(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             case 'r' -> {
                 board[endRow][endCol] = new Rook(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             case 'b' -> {
                 board[endRow][endCol] = new Bishop(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             case 'n' -> {
                 board[endRow][endCol] = new Knight(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             default -> false;
@@ -261,7 +260,7 @@ public class GameManager extends ScreenAdapter {
     public void makeNextMove() {
         synchronized (turnLock) {  // Use synchronized block to ensure only one thread runs this section at a time
             if (whiteTurn) {
-                boolean moveMade = playerTakeTurn(); // White player move logic
+                boolean moveMade = playerTurn(); // White player move logic
                 if (!moveMade) {
                     System.out.println("White move failed");
                 }
@@ -274,7 +273,7 @@ public class GameManager extends ScreenAdapter {
         }
     }
 
-    private boolean playerTakeTurn() {
+    private boolean playerTurn() {
 
         return true;
     }
