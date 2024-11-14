@@ -39,6 +39,7 @@ public class ChessBoardScreen implements Screen {
     private ScreenManager sm;
     private Stage stage;
     private Skin skin;
+    private PieceInputHandler inputHandler;
 
     // Variables for piece movement animation
     private Vector2 startPosition, targetPosition, currentPosition;
@@ -88,6 +89,8 @@ public class ChessBoardScreen implements Screen {
         this.gm = gm;
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
+        inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
+        Gdx.input.setInputProcessor(inputHandler);
         // Pieces load textures when created, placing them displays them
         for(int i = 0; i < board.length; i++) {
             for(int j = 0; j < board[i].length; j++) {
@@ -99,8 +102,6 @@ public class ChessBoardScreen implements Screen {
                 }
             }
         }
-
-
     }
 
     private boolean applyTexture(Piece piece) {
@@ -117,7 +118,6 @@ public class ChessBoardScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Clear the screen with a solid color (black, in this case)
         Gdx.gl.glClearColor(1, 1, 1, 1); // Clear to white
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -165,7 +165,6 @@ public class ChessBoardScreen implements Screen {
         }
     }
 
-
     private void drawPieces() {
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
@@ -180,13 +179,16 @@ public class ChessBoardScreen implements Screen {
 
     @Override
     public void dispose() {
+        // Dispose of the textures when they are no longer needed
+        boardTexture.dispose();
+        batch.dispose();
         stage.dispose();
         skin.dispose();
+        gm.exitGame();
     }
 
     @Override
     public void show() {
-        PieceInputHandler inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
         Gdx.input.setInputProcessor(inputHandler);
     }
 

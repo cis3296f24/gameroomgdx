@@ -12,7 +12,9 @@ public class ScreenManager extends Game {
 
     // Create references to different screens
     private ChessBoardScreen chessBoardScreen;
+    private PauseScreen pauseScreen;
     private MenuScreen menuScreen;
+    private boolean paused = false;
 
     // Variable for AI difficulty level
     private int difficulty = 0;
@@ -36,8 +38,9 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.    
     public void playChess() {
         try {
-            gm = new GameManager(difficulty);
+            gm = new GameManager(this, difficulty);
             chessBoardScreen = new ChessBoardScreen(this);
+            pauseScreen = new PauseScreen(this);
             chessBoardScreen.loadTextures(gm);
             //chessBoardScreen.addButtons(gm);
 
@@ -49,6 +52,17 @@ public class ScreenManager extends Game {
         this.setScreen(chessBoardScreen);
     }
 
+    public void togglePause() {
+        // Set the screen to Menu
+        if (!paused) {
+            paused = true;
+            this.setScreen(pauseScreen);
+        }
+        else {
+            paused = false;
+            this.setScreen(chessBoardScreen);
+        }
+    }
 
     @Override
     public void render() {
@@ -58,7 +72,9 @@ public class ScreenManager extends Game {
 
     @Override
     public void dispose() {
-
+        // Dispose of resources when the game ends
+        chessBoardScreen.dispose();
+        pauseScreen.dispose();
     }
 
     // Add other methods to manage game state, screens, etc.

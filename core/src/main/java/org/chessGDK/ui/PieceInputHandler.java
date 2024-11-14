@@ -3,13 +3,13 @@ package org.chessGDK.ui;
 import com.badlogic.gdx.graphics.Camera;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.Blank;
-import org.chessGDK.pieces.Pawn;
 import org.chessGDK.pieces.Piece;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+
 import org.chessGDK.utils.CoordinateUtils;
 
 import com.badlogic.gdx.graphics.Texture;
@@ -57,6 +57,19 @@ public class PieceInputHandler extends InputAdapter {
         }
         if (button == Input.Buttons.RIGHT && isDragging) {
             cancelLift();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.ESCAPE) {
+            // Switch to the menu screen when ESC is pressed
+            if(isDragging || !firstClick)
+                cancelLift();
+            System.out.println("Switching to the menu screen");
+            gm.getScreen().togglePause();
             return true;
         }
         return false;

@@ -10,6 +10,7 @@ import com.badlogic.gdx.files.FileHandle;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 import org.chessGDK.ui.ChessBoardScreen;
+import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
 
@@ -25,8 +26,9 @@ public class GameManager extends ScreenAdapter {
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
+    private final ScreenManager screen;
 
-    public GameManager(int difficulty) throws IOException {
+    public GameManager(ScreenManager screen, int difficulty) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -37,6 +39,7 @@ public class GameManager extends ScreenAdapter {
         halfMoves = 0;
         castlingRights = "KQkq";
         enPassantSquare = null;
+        this.screen = screen;
     }
 
     private void setupPieces() {
@@ -127,7 +130,6 @@ public class GameManager extends ScreenAdapter {
 
             checkforcheckmate(fen);
 
-
             whiteTurn = !whiteTurn;
             halfMoves++;
             piece.setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
@@ -152,6 +154,7 @@ public class GameManager extends ScreenAdapter {
         parsed[3] -= '1';
         return parsed;
     }
+
     private void checkforcheckmate(String fen) {
                 try {
                     String bestMove = getBestMove(fen);
@@ -165,6 +168,7 @@ public class GameManager extends ScreenAdapter {
                 }
 
     }
+    
     private boolean promote(char rank, int endRow, int endCol) {
         return switch (rank) {
             case 'q' -> {
@@ -345,6 +349,10 @@ public class GameManager extends ScreenAdapter {
 
     public Blank[][] getPossibilities(){
         return possibilities;
+    }
+
+    public ScreenManager getScreen() {
+        return screen;
     }
 
     public void printBoard() {
