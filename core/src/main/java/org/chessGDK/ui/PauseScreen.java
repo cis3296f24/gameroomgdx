@@ -15,16 +15,13 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 public class PauseScreen implements Screen{
     private Stage stage;
     private Skin skin;
-    private ScreenManager game; // Reference to the main game class
 
-    public PauseScreen(ScreenManager game) {
-        this.game = game;
+    public PauseScreen() {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
-
         // Load the skin
         skin = new Skin(Gdx.files.internal("uiskin.json"));
-
+        
         // Add the input listeners and buttons
         addListeners();
     } 
@@ -39,7 +36,7 @@ public class PauseScreen implements Screen{
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 System.out.println("Switching to the chess screen");
-                game.togglePause(); // Switch to the chess screen                
+                ScreenManager.getInstance().togglePause(); // Switch to the chess screen                
             }
         });
 
@@ -49,7 +46,7 @@ public class PauseScreen implements Screen{
                 // Handle the keydown event here
                 if (keycode == Input.Keys.ESCAPE) {
                     System.out.println("Switching to the chess screen");
-                    game.togglePause(); // Switch to the chess screen
+                    ScreenManager.getInstance().togglePause(); // Switch to the chess screen
                     return true; // Return true if the event was handled
                 }
                 return false; // Return false if the event was not handled
@@ -81,7 +78,9 @@ public class PauseScreen implements Screen{
     public void pause() {}
 
     @Override
-    public void resume() {}
+    public void resume() {
+        ScreenManager.getInstance().togglePause();
+    }
 
     @Override
     public void hide() {}

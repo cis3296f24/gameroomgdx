@@ -11,13 +11,30 @@ public class ScreenManager extends Game {
     private GameManager gm;
 
     // Create references to different screens
+    private static ScreenManager instance;
     private ChessBoardScreen chessBoardScreen;
-    private PauseScreen pauseScreen;
     private MenuScreen menuScreen;
+    private PauseScreen pauseScreen;
+
     private boolean paused = false;
 
     // Variable for AI difficulty level
     private int difficulty = 0;
+
+    // Private constructor to prevent external instantiation
+    private ScreenManager() {}
+
+    // Singleton instance
+    public static ScreenManager getInstance() {
+        if (instance == null) {
+            synchronized (ScreenManager.class) {
+                if (instance == null) {
+                    instance = new ScreenManager();
+                }
+            }
+        }
+        return instance;
+    }
 
     @Override
     public void create() {
@@ -27,8 +44,7 @@ public class ScreenManager extends Game {
     }
 
     public void displayMenu(){
-        menuScreen = new MenuScreen(this);
-        this.setScreen(menuScreen);
+        this.setScreen(getMenuScreen());
     }
 
     public void setDifficulty(int difficulty){
@@ -38,9 +54,9 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.    
     public void playChess() {
         try {
-            gm = new GameManager(this, difficulty);
-            chessBoardScreen = new ChessBoardScreen(this);
-            pauseScreen = new PauseScreen(this);
+            gm = new GameManager(difficulty);
+            chessBoardScreen = getChessBoardScreen();
+            pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
             //chessBoardScreen.addButtons(gm);
 
@@ -52,15 +68,38 @@ public class ScreenManager extends Game {
         this.setScreen(chessBoardScreen);
     }
 
+    public MenuScreen getMenuScreen() {
+        if (menuScreen == null) {
+            menuScreen = new MenuScreen();
+        }
+        return menuScreen;
+    }
+    
+    public ChessBoardScreen getChessBoardScreen() {
+        if (chessBoardScreen == null) {
+            chessBoardScreen = new ChessBoardScreen();
+        }
+        return chessBoardScreen;
+    }
+
+    public PauseScreen getPauseScreen() {
+        if (pauseScreen == null) {
+            pauseScreen = new PauseScreen();
+        }
+        return pauseScreen;
+    }
+
     public void togglePause() {
         // Set the screen to Menu
         if (!paused) {
             paused = true;
-            this.setScreen(pauseScreen);
+            System.out.println("Game Paused");
+            this.setScreen(getPauseScreen());
         }
         else {
             paused = false;
-            this.setScreen(chessBoardScreen);
+            System.out.println("Game Resumed");
+            this.setScreen(getChessBoardScreen());
         }
     }
 
@@ -72,9 +111,7 @@ public class ScreenManager extends Game {
 
     @Override
     public void dispose() {
-        // Dispose of resources when the game ends
-        chessBoardScreen.dispose();
-        pauseScreen.dispose();
+
     }
 
     // Add other methods to manage game state, screens, etc.

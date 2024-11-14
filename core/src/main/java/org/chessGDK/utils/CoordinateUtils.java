@@ -25,4 +25,8 @@ public class CoordinateUtils {
     public int worldToBoardY(float worldY) {
         return (int) (worldY / tileSize);
     }
+
+    public int getTileSize() {
+        return (int) tileSize;
+    }
 }

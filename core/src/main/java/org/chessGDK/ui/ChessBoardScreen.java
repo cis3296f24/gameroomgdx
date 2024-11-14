@@ -1,18 +1,13 @@
 package org.chessGDK.ui;
 
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.*;
 
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.Screen;
@@ -32,28 +27,23 @@ public class ChessBoardScreen implements Screen {
 
      */
     private Texture boardTexture;
-    private static final int TILE_SIZE = Gdx.graphics.getWidth()/8;
+    private static int TILE_SIZE = Gdx.graphics.getWidth()/8;
     private Piece[][] board;
     private Blank[][] possibilities;
     private GameManager gm;
-    private ScreenManager sm;
     private Stage stage;
     private Skin skin;
     private PieceInputHandler inputHandler;
 
     // Variables for piece movement animation
-    private Vector2 startPosition, targetPosition, currentPosition;
-    private Piece animatedPiece;
-    private float elapsedTime = 0f;  // Time passed since animation started
-    private float totalTime = .2f;    // Total time to complete the animation (e.g., 2 seconds)
+    private Vector2 startPosition, targetPosition;
     private final Array<PieceAnimation> activeAnimations = new Array<>();
     private OrthographicCamera camera;
 
-    public ChessBoardScreen(ScreenManager sm) {
+    public ChessBoardScreen() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera(); // Initialize the camera
         camera.setToOrtho(false, 800, 800); // Set the viewport size
-        this.sm = sm;
 
         // Initialize the Stage and Skin for Buttons (not in use)
         stage = new Stage(new ScreenViewport());
@@ -62,30 +52,8 @@ public class ChessBoardScreen implements Screen {
 
     }
 
-    public void addButtons(GameManager gm) {
-        // Create the button
-        TextButton aiTurnButton = new TextButton("Take your Turn", skin);
-        aiTurnButton.setPosition(10, 10); // Set position of the button
-        aiTurnButton.setSize(200, 50);    // Set size of the button
-        // Add a ClickListener to the button
-        aiTurnButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-
-                System.out.println("AI Turn Button Clicked");
-                // Call AI move logic here
-                boolean went = gm.aiTurn();
-                if (!went)
-                    System.out.println("aiTakeTurn(): " + went);
-            }
-        });
-
-        // Add the button to the stage
-        stage.addActor(aiTurnButton);
-    }
-
     public void loadTextures(GameManager gm) {
-        boardTexture = new Texture("blue3.jpg");
+        boardTexture = new Texture("brown.png");
         this.gm = gm;
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
@@ -102,18 +70,6 @@ public class ChessBoardScreen implements Screen {
                 }
             }
         }
-    }
-
-    private boolean applyTexture(Piece piece) {
-        if (piece == null)
-            return false;
-        String texturePath = "Chess_" +
-                piece.toString() +
-                (piece.isWhite() ? "l" : "d") +
-                "t100.png";
-        Texture texture = new Texture(Gdx.files.internal(texturePath));
-        piece.setTexture(texture);
-        return true;
     }
 
     @Override
@@ -144,7 +100,6 @@ public class ChessBoardScreen implements Screen {
 
     // Method to start the animation
     public void startPieceAnimation(Piece piece, int startX, int startY, int endX, int endY) {
-        animatedPiece = piece;
         startPosition = new Vector2(startX * TILE_SIZE, startY * TILE_SIZE);
         targetPosition = new Vector2(endX * TILE_SIZE, endY * TILE_SIZE);
         activeAnimations.add(new PieceAnimation(piece, startPosition, targetPosition));
@@ -195,11 +150,16 @@ public class ChessBoardScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         // Resize your screen here. The parameters represent the new window size.
-    }
+        stage.getViewport().update(width, height, true);
+        camera.setToOrtho(false, width, height);
+        TILE_SIZE = width/8;
+        inputHandler.resize(TILE_SIZE);
+     }
 
     @Override
     public void pause() {
         // Invoked when your application is paused.
+        ScreenManager.getInstance().togglePause();
     }
 
     @Override

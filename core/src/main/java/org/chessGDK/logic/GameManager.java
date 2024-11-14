@@ -2,18 +2,11 @@
 package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
-
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
-import org.chessGDK.ui.ChessBoardScreen;
-import org.chessGDK.ui.ScreenManager;
-
 import java.io.IOException;
-
 
 public class GameManager extends ScreenAdapter {
     private final Object turnLock = new Object();
@@ -26,9 +19,8 @@ public class GameManager extends ScreenAdapter {
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
-    private final ScreenManager screen;
 
-    public GameManager(ScreenManager screen, int difficulty) throws IOException {
+    public GameManager(int difficulty) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -39,7 +31,6 @@ public class GameManager extends ScreenAdapter {
         halfMoves = 0;
         castlingRights = "KQkq";
         enPassantSquare = null;
-        this.screen = screen;
     }
 
     private void setupPieces() {
@@ -90,8 +81,6 @@ public class GameManager extends ScreenAdapter {
                 possibilities[i][j] = new Blank();
             }
         }
-
-
     }
 
     public boolean movePiece(String move) {
@@ -334,11 +323,6 @@ public class GameManager extends ScreenAdapter {
         return stockfishAI.getBestMove(fen);
     }
 
-
-    public StockfishAI getAI() {
-        return stockfishAI;
-    }
-
     public boolean isWhiteTurn() {
         return whiteTurn;
     }
@@ -349,10 +333,6 @@ public class GameManager extends ScreenAdapter {
 
     public Blank[][] getPossibilities(){
         return possibilities;
-    }
-
-    public ScreenManager getScreen() {
-        return screen;
     }
 
     public void printBoard() {

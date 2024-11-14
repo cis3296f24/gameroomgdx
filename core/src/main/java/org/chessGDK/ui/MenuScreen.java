@@ -29,8 +29,8 @@ public class MenuScreen implements Screen {
     private SelectBox<String> selectBox;
     private Label tooltipLabel;
 
-    public MenuScreen(ScreenManager screenManager) {
-        this.screenManager = screenManager;
+    public MenuScreen() {
+        this.screenManager = ScreenManager.getInstance();
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);

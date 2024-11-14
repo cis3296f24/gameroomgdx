@@ -26,7 +26,6 @@ public class PieceInputHandler extends InputAdapter {
     private final Camera camera;
     private final Piece[][] board;
     private final Blank[][] possibilities;
-    private final int TILE_SIZE;
 
     private CoordinateUtils coords;
 
@@ -35,8 +34,7 @@ public class PieceInputHandler extends InputAdapter {
         this.camera = camera;
         this.board = board;
         this.possibilities = p;
-        this.TILE_SIZE = tileSize;
-        coords = new CoordinateUtils(TILE_SIZE);
+        coords = new CoordinateUtils(tileSize);
     }
 
     @Override
@@ -69,7 +67,7 @@ public class PieceInputHandler extends InputAdapter {
             if(isDragging || !firstClick)
                 cancelLift();
             System.out.println("Switching to the menu screen");
-            gm.getScreen().togglePause();
+            ScreenManager.getInstance().togglePause();
             return true;
         }
         return false;
@@ -113,8 +111,8 @@ public class PieceInputHandler extends InputAdapter {
     }
 
     private void cancelLift() {
-        selectedPiece.setPosition(coords.worldToBoardX(liftPositon.x) * TILE_SIZE,
-                coords.worldToBoardY(liftPositon.y) * TILE_SIZE);
+        selectedPiece.setPosition(coords.worldToBoardX(liftPositon.x) * coords.getTileSize(),
+                coords.worldToBoardY(liftPositon.y) * coords.getTileSize());
         System.out.println("Move cancelled");
         clearPossible();
         firstClick = true;
@@ -124,7 +122,6 @@ public class PieceInputHandler extends InputAdapter {
 
     // Method to handle placing the piece
     private void handlePlace(int screenX, int screenY) {
-        clearPossible();
         Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
         camera.unproject(worldCoordinates);
         int placeX = coords.worldToBoardX(worldCoordinates.x);
@@ -141,6 +138,7 @@ public class PieceInputHandler extends InputAdapter {
             placeX -= 'a';
             placeY -= '1';
             isDragging = false;
+            clearPossible();
         } else {
             startPos.x -= 'a';
             startPos.y -= '1';
@@ -169,6 +167,10 @@ public class PieceInputHandler extends InputAdapter {
                 temp.setTexture(new Texture("blank.png"));
             }
         }
+    }
+
+    public void resize(int tileSize) {
+        coords = new CoordinateUtils(tileSize);
     }
 
 
