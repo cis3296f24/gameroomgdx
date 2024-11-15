@@ -2,11 +2,15 @@
 package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 import java.io.IOException;
+import java.util.Arrays;
+
 
 public class GameManager extends ScreenAdapter {
     private final Object turnLock = new Object();
@@ -81,6 +85,13 @@ public class GameManager extends ScreenAdapter {
                 possibilities[i][j] = new Blank();
             }
         }
+
+        for(int i = 0; i < board.length; i++) {
+            Arrays.fill(board[i], null);
+        }
+
+        parseFen("rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R");
+
     }
 
     public boolean movePiece(String move) {
@@ -207,10 +218,10 @@ public class GameManager extends ScreenAdapter {
             if (row > 0) {
                 fen.append("/");
             }
+
         }
         // 2. Active Color (w or b)
         fen.append(whiteTurn ? " w " : " b ");
-
         // 3. Castling Availability (KQkq or -)
         if (!castlingRights.isEmpty()) {
             if (castlingPieces[1].hasMoved()) {
@@ -237,18 +248,58 @@ public class GameManager extends ScreenAdapter {
 
         fen.append(castlingRights.isEmpty() ? "-" : castlingRights);
         fen.append(" ");
-
         // 4. En Passant Target Square (e.g., e3 or -)
         fen.append(enPassantSquare != null ? enPassantSquare : "-");
         fen.append(" ");
-
         // 5. Halfmove Clock
         fen.append(halfMoves).append(" ");
-
         // 6. Fullmove Number
         fen.append(halfMoves / 2);
 
         return fen.toString();
+    }
+
+    public Piece getPieceFromString(String p){
+        Piece temp = null;
+        if(p.equalsIgnoreCase("P")){
+            temp = new Pawn(p.equals("P"));
+        }
+        else if (p.equalsIgnoreCase("R")) {
+            temp = new Rook(p.equals("R"));
+        }
+        else if (p.equalsIgnoreCase("B")) {
+            temp = new Bishop(p.equals("B"));
+
+        }else if (p.equalsIgnoreCase("Q")) {
+            temp = new Queen(p.equals("Q"));
+
+        }else if (p.equalsIgnoreCase("K")) {
+            temp = new King(p.equals("K"));
+
+        }else if (p.equalsIgnoreCase("N")) {
+            temp = new Knight(p.equals("N"));
+
+        }
+        return temp;
+    }
+    public void parseFen(String fen){
+        int row = 7;
+        int col = 0;
+        for(int i = 0; i < fen.length(); i++){
+            if(fen.charAt(i) == '/'){
+                row--;
+                col = 0;
+                continue;
+            } else if (Character.isDigit(fen.charAt(i))) {
+                col = col + Character.getNumericValue(fen.charAt(i)) - 1;
+            } else if (fen.charAt(i) == ' ') {
+                break;
+            }
+            else{
+                board[row][col] = getPieceFromString(Character.toString(fen.charAt(i)));
+            }
+            col++;
+        }
     }
 
     public void makeNextMove() {
