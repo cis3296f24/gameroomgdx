@@ -59,6 +59,12 @@ public class StockfishAI {
         outputStream.flush();
     }
 
+    private void sendDifficulty() throws IOException {
+        String command = "setoption name Skill Level value " + difficulty + "\n";
+        System.out.println("command sent: " + command);
+        sendCommand(command);
+    }
+
     private void readInfo() throws IOException {
         String line;
         while ((line = inputReader.readLine()) != null) {
@@ -70,23 +76,30 @@ public class StockfishAI {
         }
     }
 
-    private void sendDifficulty() throws IOException {
-        String command = "setoption name Skill Level value " + difficulty + "\n";
-        System.out.println("command sent: " + command);
-        sendCommand(command);
-    }
-
     private String[] readMove() throws IOException {
         String[] moves = {"", ""};
         String line;
         while ((line = inputReader.readLine()) != null) {
             if (line.startsWith("bestmove")) {
                 moves[0] = line.split(" ")[1];  // Extract the move from the response
-                moves[1] = line.split(" ")[3];
+                if (line.split(" ").length > 2)
+                    moves[1] = line.split(" ")[3];
                 break;
             }
         }
         return moves;
+    }
+
+    public boolean checkmate(String fen) throws IOException {
+        if (fen.isEmpty())
+            return false;
+        String toSend = "position fen " + fen + "\n";
+        sendCommand(toSend);
+        // Request the best move
+        toSend = "go movetime 10\n";
+        sendCommand(toSend);
+        String[] moves = readMove();
+        return moves[0].equalsIgnoreCase("(none)");        
     }
 
     public String getBestMove(String fen) throws IOException {
