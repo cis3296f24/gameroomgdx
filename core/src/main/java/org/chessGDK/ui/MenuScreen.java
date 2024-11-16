@@ -116,7 +116,7 @@ public class MenuScreen implements Screen {
         TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles");
         puzzleButton.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                screenManager.playChess();
+                screenManager.playPuzzle();
             }
         });
         table.add(puzzleButton).fillX().padBottom(15);

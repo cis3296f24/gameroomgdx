@@ -27,8 +27,10 @@ public class GameManager extends ScreenAdapter {
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
+    private final boolean condition;
 
-    public GameManager(int difficulty) throws IOException {
+    public GameManager(int difficulty, boolean condition) throws IOException {
+        this.condition = condition;
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -40,6 +42,7 @@ public class GameManager extends ScreenAdapter {
         castlingRights = "KQkq";
         enPassantSquare = null;
     }
+
 
     private void setupPieces() {
         // Place white pawns on the second row (index 1)
@@ -94,7 +97,9 @@ public class GameManager extends ScreenAdapter {
             Arrays.fill(board[i], null);
         }
 
-        parseFen("rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R");
+        if(condition){
+            parseFen("rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R");
+        }
 
     }
 
