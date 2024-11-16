@@ -42,10 +42,8 @@ public class PuzzleScreen implements Screen {
     private float totalTime = .2f;    // Total time to complete the animation (e.g., 2 seconds)
     private final Array<PieceAnimation> activeAnimations = new Array<>();
     private OrthographicCamera camera;
-    private puzzleFENs puzzle;
 
     public PuzzleScreen(ScreenManager sm) {
-        puzzle = new puzzleFENs();
         batch = new SpriteBatch();
         camera = new OrthographicCamera(); // Initialize the camera
         camera.setToOrtho(false, 800, 800); // Set the viewport size
@@ -83,9 +81,6 @@ public class PuzzleScreen implements Screen {
     public void loadTextures(GameManager gm) {
         boardTexture = new Texture("blue3.jpg");
         this.gm = gm;
-        String FEN = puzzle.getRandomPuzzle();
-        gm.parseFen(FEN);
-        gm.getPieceFromString(FEN);
 
         board = gm.getBoard();
         possibilities = gm.getPossibilities();

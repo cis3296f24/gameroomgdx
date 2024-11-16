@@ -27,10 +27,10 @@ public class GameManager extends ScreenAdapter {
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
-    private final boolean condition;
+    private String FEN;
 
-    public GameManager(int difficulty, boolean condition) throws IOException {
-        this.condition = condition;
+    public GameManager(int difficulty, String FEN) throws IOException {
+        this.FEN = FEN;
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -97,9 +97,9 @@ public class GameManager extends ScreenAdapter {
             Arrays.fill(board[i], null);
         }
 
-        if(condition){
-            parseFen("rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R");
-        }
+
+        parseFen(FEN);
+
 
     }
 

@@ -15,9 +15,12 @@ public class ScreenManager extends Game {
     private MenuScreen menuScreen;
     private PuzzleScreen puzzleScreen;
 
+    private puzzleFENs puzzle;
+
     // Variable for AI difficulty level
     private int difficulty = 0;
     private boolean condition = true;
+    private String FEN;
 
     @Override
     public void create() {
@@ -33,7 +36,9 @@ public class ScreenManager extends Game {
 
     public void playPuzzle(){
         try {
-            gm = new GameManager(difficulty, false);
+            puzzle = new puzzleFENs();
+            FEN = puzzle.getRandomPuzzle();
+            gm = new GameManager(difficulty, FEN);
             puzzleScreen = new PuzzleScreen(this);
             puzzleScreen.loadTextures(gm);
 
@@ -52,7 +57,8 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.    
     public void playChess() {
         try {
-            gm = new GameManager(difficulty, true);
+            FEN = "rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R";
+            gm = new GameManager(difficulty, FEN);
             chessBoardScreen = new ChessBoardScreen(this);
             chessBoardScreen.loadTextures(gm);
             //chessBoardScreen.addButtons(gm);
