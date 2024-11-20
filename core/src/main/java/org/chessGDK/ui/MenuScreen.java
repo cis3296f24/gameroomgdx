@@ -65,10 +65,27 @@ public class MenuScreen implements Screen {
         table.add(singleplayerButton).fillX().padBottom(15);
         table.row();
 
-        // Difficulty Level SelectBox
+        // Difficulty Level SelectBox with Tooltip
         selectBox = new SelectBox<>(skin);
         selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
         System.out.println("Default Difficulty Novice set - ELO: 800");
+
+        // Add a tooltip for the SelectBox
+        selectBox.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                tooltipLabel.setText("Select the difficulty level for the AI opponent");
+                tooltipLabel.setVisible(true);
+                positionTooltip(selectBox);
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                tooltipLabel.setVisible(false);
+            }
+        });
+
+        // Add a listener for difficulty changes
         selectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -161,25 +178,20 @@ public class MenuScreen implements Screen {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 tooltipLabel.setVisible(false);
             }
-
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                // Any additional functionality on click
-            }
         });
 
         return button;
     }
 
-    private void positionTooltip(Actor button) {
-        float tooltipX = button.getX() + button.getWidth() + 10; // Position to the right of the button
-        float tooltipY = button.getY() + button.getHeight() / 2; // Center vertically with the button
+    private void positionTooltip(Actor actor) {
+        float tooltipX = actor.getX() + actor.getWidth() + 10; // Position to the right of the actor
+        float tooltipY = actor.getY() + actor.getHeight() / 2; // Center vertically with the actor
 
         // Check if tooltip goes out of screen bounds, adjust if necessary
         if (tooltipX + tooltipLabel.getWidth() > Gdx.graphics.getWidth()) {
-            // Place tooltip above the button if it goes off the right edge
-            tooltipX = button.getX();
-            tooltipY = button.getY() + button.getHeight() + 10;
+            // Place tooltip above the actor if it goes off the right edge
+            tooltipX = actor.getX();
+            tooltipY = actor.getY() + actor.getHeight() + 10;
         }
 
         // Update the tooltip label position
