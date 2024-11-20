@@ -17,7 +17,7 @@ public class StockfishAI {
     private int difficulty = 0;
 
     public StockfishAI(int depth, int difficulty) throws IOException {
-        String path = System.getProperty("root.path");
+        String path = System.getProperty("assets.path");
         this.depth = depth;
         if (path == null) {
             path = getPathForJar(path);

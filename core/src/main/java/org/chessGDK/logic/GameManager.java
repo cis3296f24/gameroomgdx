@@ -43,21 +43,6 @@ public class GameManager extends ScreenAdapter {
         moveList = new Stack<>();
         setupPieces();
         parseFen(fen);
-        stockfishAI = new StockfishAI(DEPTH, difficulty);
-        printBoard();
-        halfMoves = 0;
-        castlingRights = "KQkq";
-        enPassantSquare = null;
-    }
-
-    public GameManager(int difficulty) throws IOException {
-
-        board = new Piece[8][8];
-        possibilities = new Blank[8][8];
-        whiteTurn = true;
-        castlingPieces = new Piece[6];
-        moveList = new Stack<>();
-        setupPieces();
         if (difficulty == -1) {
             freeMode = true;
         }
@@ -71,6 +56,7 @@ public class GameManager extends ScreenAdapter {
         enPassantSquare = null;
         screen = ScreenManager.getInstance().getChessBoardScreen();
     }
+
 
     public void startGameLoopThread() {
         new Thread(this::startGameLoop){{setDaemon(true);}}.start();
