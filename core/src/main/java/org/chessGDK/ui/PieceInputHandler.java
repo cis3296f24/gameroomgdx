@@ -3,7 +3,6 @@ package org.chessGDK.ui;
 import com.badlogic.gdx.graphics.Camera;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.Blank;
-import org.chessGDK.pieces.Pawn;
 import org.chessGDK.pieces.Piece;
 
 import com.badlogic.gdx.Input;
@@ -63,6 +62,19 @@ public class PieceInputHandler extends InputAdapter {
     }
 
     @Override
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.ESCAPE) {
+            // Switch to the menu screen when ESC is pressed
+            if(isDragging || !firstClick)
+                cancelLift();
+            System.out.println("Switching to the menu screen");
+            ScreenManager.getInstance().togglePause();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean mouseMoved(int screenX, int screenY) {
         if (isDragging && selectedPiece != null) {
             // Update the piece's position to follow the cursor
@@ -100,8 +112,8 @@ public class PieceInputHandler extends InputAdapter {
     }
 
     private void cancelLift() {
-        selectedPiece.setPosition(coords.worldToBoardX(liftPositon.x) * TILE_SIZE,
-                coords.worldToBoardY(liftPositon.y) * TILE_SIZE);
+        selectedPiece.setPosition(coords.worldToBoardX(liftPositon.x) * coords.getTileSize(),
+                coords.worldToBoardY(liftPositon.y) * coords.getTileSize());
         System.out.println("Move cancelled");
         clearPossible();
         firstClick = true;
@@ -111,7 +123,6 @@ public class PieceInputHandler extends InputAdapter {
 
     // Method to handle placing the piece
     private void handlePlace(int screenX, int screenY) {
-        clearPossible();
         Vector3 worldCoordinates = new Vector3(screenX, screenY, 0);
         camera.unproject(worldCoordinates);
         int placeX = coords.worldToBoardX(worldCoordinates.x);
@@ -128,6 +139,8 @@ public class PieceInputHandler extends InputAdapter {
             placeX -= 'a';
             placeY -= '1';
             isDragging = false;
+            clearPossible();
+            gm.notifyMoveMade();
         } else {
             startPos.x -= 'a';
             startPos.y -= '1';
@@ -137,7 +150,7 @@ public class PieceInputHandler extends InputAdapter {
         selectedPiece = null;  // Reset selection
         startPos = null;
     }
-    
+
     private void showPossible(int oldX, int oldY) {
         for(int col = 0; col <8; ++col){
             for(int row = 0; row<8; ++row){
@@ -148,7 +161,7 @@ public class PieceInputHandler extends InputAdapter {
             }
         }
     }
-    
+
     private void clearPossible() {
         for(int col = 0; col <8; ++col){
             for(int row = 0; row<8; ++row){
@@ -156,6 +169,10 @@ public class PieceInputHandler extends InputAdapter {
                 temp.setTexture(new Texture("blank.png"));
             }
         }
+    }
+
+    public void resize(int tileSize) {
+        coords = new CoordinateUtils(tileSize);
     }
 
 

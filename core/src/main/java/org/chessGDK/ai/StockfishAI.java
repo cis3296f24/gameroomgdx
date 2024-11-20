@@ -17,30 +17,16 @@ public class StockfishAI {
     private int difficulty = 0;
 
     public StockfishAI(int depth, int difficulty) throws IOException {
-        String rootPath = System.getProperty("root.path");
-        System.out.println(rootPath);
-        if (rootPath == null) {
-            try {
-                // Locate and open the manifest file in the JAR
-                InputStream manifestStream = StockfishAI.class.getResourceAsStream("/META-INF/MANIFEST.MF");
-                if (manifestStream != null) {
-                    Manifest manifest = new Manifest(manifestStream);
-                    Attributes attributes = manifest.getMainAttributes();
-
-                    // Retrieve the "Asset-Path" property or any other property you defined
-                    rootPath = attributes.getValue("Root-Path");
-                    System.out.println("Root Path from Manifest: " + rootPath);
-                } else {
-                    System.err.println("Manifest not found in JAR.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        String path = System.getProperty("root.path");
+        this.depth = depth;
+        if (path == null) {
+            path = getPathForJar(path);
         }
 
-        FileHandle stockfishHandle = Gdx.files.internal(rootPath + "/assets/stockfish/stockfish-windows-x86-64-avx2.exe");
-        ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.file().getAbsolutePath());
-        this.depth = depth;
+        System.out.println("Root Path: " + path);
+        FileHandle stockfishHandle = Gdx.files.local(path + "stockfish/stockfish-windows-x86-64-avx2.exe");
+
+        ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.path());
         this.difficulty = difficulty;
         stockfishProcess = processBuilder.start();
         inputReader = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));
@@ -50,8 +36,27 @@ public class StockfishAI {
         readInfo();
 
         System.out.println("Stockfish: Universal Chess Interface - initialized");
-
         // Close streams and process when done
+    }
+
+    private static String getPathForJar(String path) {
+        try {
+            // Locate and open the manifest file in the JAR
+            InputStream manifestStream = StockfishAI.class.getResourceAsStream("/META-INF/MANIFEST.MF");
+            if (manifestStream != null) {
+                Manifest manifest = new Manifest(manifestStream);
+                Attributes attributes = manifest.getMainAttributes();
+
+                // Retrieve the "Asset-Path" property or any other property you defined
+                path = attributes.getValue("Root-Path");
+                System.out.println("Root Path from Manifest: " + path);
+            } else {
+                System.err.println("Manifest not found in JAR.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return path;
     }
 
     // Send a command to Stockfish as a newline terminated string

@@ -23,4 +23,8 @@ public class Knight extends Piece{
     public String toString() {
         return isWhite() ? "N" : "n";
     }
+
+    public Piece copy() {
+        return new Knight(this.isWhite);
+    }
 }

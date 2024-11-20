@@ -40,4 +40,8 @@ public class Pawn extends Piece{
     public String toString() {
         return isWhite() ? "P" : "p";
     }
+
+    public Piece copy() {
+        return new Pawn(this.isWhite);
+    }
 }

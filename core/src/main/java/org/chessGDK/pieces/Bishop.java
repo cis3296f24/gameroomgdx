@@ -12,6 +12,9 @@ public class Bishop extends Piece {
         if (Math.abs(startCol - endCol) != Math.abs(startRow - endRow)) {
             return false;
         }
+        else if (startCol == endCol && startRow == endRow) {
+            return false;
+        }
 
         // Check if there are any pieces between the start and end
         int xDir = startCol < endCol ? 1 : -1;
@@ -35,5 +38,9 @@ public class Bishop extends Piece {
     @Override
     public String toString() {
         return isWhite() ? "B" : "b";
+    }
+
+    public Piece copy() {
+        return new Bishop(this.isWhite);
     }
 }

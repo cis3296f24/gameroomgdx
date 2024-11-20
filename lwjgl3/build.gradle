@@ -10,21 +10,23 @@ buildscript {
   }
 }
 plugins {
-  id "io.github.fourlastor.construo" version "1.4.1"
+  id "io.github.fourlastor.construo" version "1.5.1"
+  id 'de.undercouch.download' version "5.6.0"
   id "application"
 }
 
 
 import io.github.fourlastor.construo.Target
+import de.undercouch.gradle.tasks.download.Download
 
 sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
 mainClassName = 'org.chessGDK.lwjgl3.Lwjgl3Launcher'
 application.setMainClass(mainClassName)
 eclipse.project.name = appName + '-lwjgl3'
-java.sourceCompatibility = 21
-java.targetCompatibility = 21
+java.sourceCompatibility = javaVersion.toInteger()
+java.targetCompatibility = javaVersion.toInteger()
 if (JavaVersion.current().isJava9Compatible()) {
-        compileJava.options.release.set(21)
+        compileJava.options.release.set(javaVersion.toInteger())
 }
 
 dependencies {
@@ -41,6 +43,8 @@ dependencies {
 
 def os = System.properties['os.name'].toLowerCase()
 
+
+
 run {
   workingDir = rootProject.file('assets').path
   setIgnoreExitValue(true)
@@ -49,6 +53,7 @@ run {
 }
 
 jar {
+
 // sets the name of the .jar file this produces to the name of the game or app, with the version after.
   archiveFileName.set("${appName}-${projectVersion}.jar")
 // the duplicatesStrategy matters starting in Gradle 7.0; this setting works.
@@ -64,7 +69,6 @@ jar {
   manifest {
     attributes (
       'Main-Class': project.mainClassName,
-      'Root-Path': "${project.rootDir}" // Embeds the assets path
       )
     }
 // this last step may help on some OSes that need extra instruction to make runnable JARs.
@@ -74,39 +78,59 @@ jar {
 }
 
 construo {
-    // name of the executable
-    name.set(appName)
-    // human-readable name, used for example in the `.app` name for macOS
-    humanName.set(appName)
-    // Optional, defaults to project version property
-    version.set("$projectVersion")
+  // name of the executable
+  name.set(appName)
+  // human-readable name, used for example in the `.app` name for macOS
+  humanName.set(appName)
+  // Optional, defaults to project version property
+  version.set("$projectVersion")
 
-    targets.configure {
-      create("linuxX64", Target.Linux) {
-        architecture.set(Target.Architecture.X86_64)
-        jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.12_7.tar.gz")
-      }
-      create("macM1", Target.MacOs) {
-        architecture.set(Target.Architecture.AARCH64)
-        jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.12_7.tar.gz")
-        // macOS needs an identifier
-        identifier.set("org.chessGDK." + appName)
-        // Optional: icon for macOS
-        macIcon.set(project.file("icons/logo.icns"))
-      }
-      create("macX64", Target.MacOs) {
-        architecture.set(Target.Architecture.X86_64)
-        jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.12_7.tar.gz")
-        // macOS needs an identifier
-        identifier.set("org.chessGDK." + appName)
-        // Optional: icon for macOS
-        macIcon.set(project.file("icons/logo.icns"))
-      }
-      create("winX64", Target.Windows) {
-        architecture.set(Target.Architecture.X86_64)
-        jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_x64_windows_hotspot_17.0.12_7.zip")
-      }
+  targets.configure {
+    create("linuxX64", Target.Linux) {
+      architecture.set(Target.Architecture.X86_64)
+      jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.12_7.tar.gz")
     }
+    create("macM1", Target.MacOs) {
+      architecture.set(Target.Architecture.AARCH64)
+      jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.12_7.tar.gz")
+      // macOS needs an identifier
+      identifier.set("org.chessGDK." + appName)
+      // Optional: icon for macOS
+      macIcon.set(project.file("icons/logo.icns"))
+    }
+    create("macX64", Target.MacOs) {
+      architecture.set(Target.Architecture.X86_64)
+      jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.12_7.tar.gz")
+      // macOS needs an identifier
+      identifier.set("org.chessGDK." + appName)
+      // Optional: icon for macOS
+      macIcon.set(project.file("icons/logo.icns"))
+    }
+    create("winX64", Target.Windows) {
+      architecture.set(Target.Architecture.X86_64)
+      jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip")
+    }
+  }
+}
+
+tasks.register("downloadFile", Download) {
+  src 'https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-windows-x86-64-avx2.zip'
+  dest layout.buildDirectory.dir('libs')
+}
+
+
+tasks.register("unzipAndPackageWin", Copy) {
+  dependsOn downloadFile
+  from zipTree(layout.buildDirectory.file('libs/stockfish-windows-x86-64-avx2.zip'))
+  into layout.buildDirectory.dir('construo/winX64/roast')
+  doLast {
+
+  }
+}
+
+tasks.named('packageWinX64').configure {
+  dependsOn unzipAndPackageWin
+
 }
 
 // Equivalent to the jar task; here for compatibility with gdx-setup.

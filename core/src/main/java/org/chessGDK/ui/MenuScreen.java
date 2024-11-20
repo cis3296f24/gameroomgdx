@@ -9,9 +9,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -28,9 +30,10 @@ public class MenuScreen implements Screen {
     private Skin skin;
     private SelectBox<String> selectBox;
     private Label tooltipLabel;
+    private String difficultyText;
 
-    public MenuScreen(ScreenManager screenManager) {
-        this.screenManager = screenManager;
+    public MenuScreen() {
+        this.screenManager = ScreenManager.getInstance();
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);
@@ -56,18 +59,14 @@ public class MenuScreen implements Screen {
         buttonStyle.overFontColor = HOVER_COLOR;
 
         // Singleplayer Button
-        TextButton singleplayerButton = createMenuButton("Singleplayer", "Start a game against AI");
-        singleplayerButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                screenManager.playChess();
-            }
-        });
+        TextButton singleplayerButton = createMenuButton("Singleplayer", "Start a game against AI", screenManager::playChess);
         table.add(singleplayerButton).fillX().padBottom(15);
         table.row();
 
         // Difficulty Level SelectBox with Tooltip
         selectBox = new SelectBox<>(skin);
         selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
+
         System.out.println("Default Difficulty Novice set - ELO: 800");
 
         // Add a tooltip for each difficulty level
@@ -98,34 +97,74 @@ public class MenuScreen implements Screen {
                 tooltipLabel.setVisible(false);
             }
         });
+        selectBox.getList().addListener(new InputListener() {
+            @Override
+            public boolean mouseMoved(InputEvent event, float x, float y) {
+                int index = selectBox.getList().getSelectedIndex();
+                if (index != -1) {
+                    // Get the stage coordinates of the list
+                    Vector2 listPosition = selectBox.getList().localToStageCoordinates(new Vector2(0, 0));
 
+                    // Calculate the Y-coordinate of the selected item
+                    float itemHeight = selectBox.getList().getItemHeight();
+                    float selectedItemY = listPosition.y + selectBox.getList().getHeight() - (index + 1) * itemHeight;
+
+                    // Set the tooltip position to the right of the selected item
+                    tooltipLabel.setPosition(listPosition.x + selectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
+                    switch(index) {
+                        case 0:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 800");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 1:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 1200");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 2:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 1600");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 3:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 2000");
+                            tooltipLabel.setVisible(true);
+                            break;
+                    }
+                }
+                return super.mouseMoved(event, x, y);
+            }
+        });
         // Add a listener for difficulty changes
         selectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 String selectedLevel = selectBox.getSelected();
                 int difficulty;
+                tooltipLabel.setVisible(false);
 
                 switch (selectedLevel) {
                     case "Novice":
                         difficulty = 0;
                         screenManager.setDifficulty(difficulty);
                         System.out.println("Difficulty Novice set - ELO: 800");
+                        difficultyText = "Difficulty Novice set - ELO: 800";
                         break;
                     case "Intermediate":
                         difficulty = 2;
                         screenManager.setDifficulty(difficulty);
                         System.out.println("Difficulty Intermediate set - ELO: 1200");
+                        difficultyText = "Difficulty Intermediate set - ELO: 1200";
                         break;
                     case "Expert":
                         difficulty = 5;
                         screenManager.setDifficulty(difficulty);
                         System.out.println("Difficulty Expert set - ELO: 1600");
+                        difficultyText = "Difficulty Expert set - ELO: 1600";
                         break;
                     case "Master":
                         difficulty = 9;
                         screenManager.setDifficulty(difficulty);
                         System.out.println("Difficulty Master set - ELO: 2000");
+                        difficultyText = "Difficulty Master set - ELO: 2000";
                         break;
                 }
             }
@@ -134,46 +173,30 @@ public class MenuScreen implements Screen {
         table.row();
 
         // Multiplayer Button
-        TextButton multiplayerButton = createMenuButton("Multiplayer", "Play against another player");
-        multiplayerButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                screenManager.playChess();
-            }
-        });
+        TextButton multiplayerButton = createMenuButton("Multiplayer", "Play against another player", screenManager::playChess);
         table.add(multiplayerButton).fillX().padBottom(15);
         table.row();
 
         // Puzzle Button
-        TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles");
-        puzzleButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                screenManager.playPuzzle();
-            }
-        });
+        TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles", screenManager::playPuzzle);
         table.add(puzzleButton).fillX().padBottom(15);
         table.row();
 
+        //Free Mode Button
+        TextButton freeModeButton = createMenuButton("Free Mode", "Play chess without any restrictions", screenManager::playFreeMode);
+        table.add(freeModeButton).fillX().padBottom(15);
+        table.row();
         // Load Save State Button
-        TextButton loadButton = createMenuButton("Load", "Loads From Preexisting Save State");
-        loadButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                screenManager.loadSaveState();
-            }
-        });
+        TextButton loadButton = createMenuButton("Load", "Loads From Preexisting Save State", screenManager::loadSaveState);
         table.add(loadButton).fillX().padBottom(15);
         table.row();
 
         // Exit Button
-        TextButton exitButton = createMenuButton("Exit", "Close the application");
-        exitButton.addListener(new ClickListener() {
-            public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
-            }
-        });
+        TextButton exitButton = createMenuButton("Exit", "Close the application", Gdx.app::exit);
         table.add(exitButton).fillX().padBottom(15);
     }
 
-    private TextButton createMenuButton(String text, String tooltipText) {
+    private TextButton createMenuButton(String text, String tooltipText, Runnable action) {
         TextButton button = new TextButton(text, skin);
         button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
         button.getLabel().setFontScale(FONT_SCALE);
@@ -192,6 +215,13 @@ public class MenuScreen implements Screen {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 tooltipLabel.setVisible(false);
             }
+
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                action.run();
+                tooltipLabel.setVisible(false);
+            }
+
         });
 
         return button;
@@ -213,7 +243,9 @@ public class MenuScreen implements Screen {
     }
 
     @Override
-    public void show() {}
+    public void show() {
+        Gdx.input.setInputProcessor(stage);
+    }
 
     @Override
     public void render(float delta) {
@@ -242,5 +274,6 @@ public class MenuScreen implements Screen {
     public void dispose() {
         stage.dispose();
         skin.dispose();
+        System.out.println("MenuScreen disposed");
     }
 }

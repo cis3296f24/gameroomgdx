@@ -39,4 +39,8 @@ public class Rook extends Piece {
     public String toString() {
         return isWhite() ? "R" : "r";
     }
+
+    public Piece copy() {
+        return new Rook(this.isWhite);
+    }
 }
