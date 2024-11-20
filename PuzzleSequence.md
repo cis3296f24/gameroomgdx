@@ -15,8 +15,8 @@ sequenceDiagram
     PuzzleScreen ->> + GameManager: getPossibilities()
     GameManager -->> - PuzzleScreen: Return Possibilities
     participant puzzleFENS
-    puzzleFENS ->> + PuzzleScreen: getRandomPuzzle()
-    PuzzleScreen -->> - puzzleFENS: Return FEN
+    PuzzleScreen ->> + puzzleFENS: getRandomPuzzle()
+    puzzleFENS -->> - PuzzleScreen: Return FEN
 
 ```
 The sequence diagram illustrates the process of a user clicking on the puzzle button.  
