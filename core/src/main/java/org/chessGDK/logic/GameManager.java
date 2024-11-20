@@ -27,6 +27,21 @@ public class GameManager extends ScreenAdapter {
     private String castlingRights;
     private String enPassantSquare;
 
+    public GameManager(int difficulty, String fen) throws IOException {
+        board = new Piece[8][8];
+        possibilities = new Blank[8][8];
+        whiteTurn = true;
+        castlingPieces = new Piece[6];
+        setupPieces();
+        parseFen(fen);
+        stockfishAI = new StockfishAI(DEPTH, difficulty);
+        printBoard();
+        halfMoves = 0;
+        castlingRights = "KQkq";
+        enPassantSquare = null;
+    }
+
+
     public GameManager(int difficulty) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
@@ -88,13 +103,6 @@ public class GameManager extends ScreenAdapter {
                 possibilities[i][j] = new Blank();
             }
         }
-
-        for(int i = 0; i < board.length; i++) {
-            Arrays.fill(board[i], null);
-        }
-
-        parseFen("rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R");
-
     }
 
     public boolean movePiece(String move) {
@@ -286,6 +294,9 @@ public class GameManager extends ScreenAdapter {
         return temp;
     }
     public void parseFen(String fen){
+        for(int i = 0; i < board.length; i++) {
+            Arrays.fill(board[i], null);
+        }
         int row = 7;
         int col = 0;
         for(int i = 0; i < fen.length(); i++){
