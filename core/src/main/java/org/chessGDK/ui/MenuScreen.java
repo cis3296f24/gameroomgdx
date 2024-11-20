@@ -70,11 +70,25 @@ public class MenuScreen implements Screen {
         selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
         System.out.println("Default Difficulty Novice set - ELO: 800");
 
-        // Add a tooltip for the SelectBox
+        // Add a tooltip for each difficulty level
         selectBox.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                tooltipLabel.setText("Select the difficulty level for the AI opponent");
+                String selectedLevel = selectBox.getSelected();
+                switch (selectedLevel) {
+                    case "Novice":
+                        tooltipLabel.setText("Ideal for beginners learning the basics of chess. (ELO: 800)");
+                        break;
+                    case "Intermediate":
+                        tooltipLabel.setText("For casual players familiar with fundamental tactics. (ELO: 1200)");
+                        break;
+                    case "Expert":
+                        tooltipLabel.setText("Challenging level for advanced players mastering strategy. (ELO: 1600)");
+                        break;
+                    case "Master":
+                        tooltipLabel.setText("Play against a high-level AI with professional skills. (ELO: 2000)");
+                        break;
+                }
                 tooltipLabel.setVisible(true);
                 positionTooltip(selectBox);
             }
