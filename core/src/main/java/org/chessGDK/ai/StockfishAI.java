@@ -2,9 +2,10 @@ package org.chessGDK.ai;
 
 import java.io.*;
 import java.lang.ProcessBuilder;
+import java.util.Arrays;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-
+import java.util.ArrayList;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
@@ -23,7 +24,7 @@ public class StockfishAI {
         }
 
         System.out.println("Root Path: " + path);
-        FileHandle stockfishHandle = Gdx.files.local("stockfish/stockfish-windows-x86-64-avx2.exe");
+        FileHandle stockfishHandle = Gdx.files.local(path + "stockfish/stockfish-windows-x86-64-avx2.exe");
 
         ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.path());
         this.difficulty = difficulty;
@@ -64,6 +65,12 @@ public class StockfishAI {
         outputStream.flush();
     }
 
+    private void sendDifficulty() throws IOException {
+        String command = "setoption name Skill Level value " + difficulty + "\n";
+        System.out.println("command sent: " + command);
+        sendCommand(command);
+    }
+
     private void readInfo() throws IOException {
         String line;
         while ((line = inputReader.readLine()) != null) {
@@ -75,23 +82,31 @@ public class StockfishAI {
         }
     }
 
-    private void sendDifficulty() throws IOException {
-        String command = "setoption name Skill Level value " + difficulty + "\n";
-        System.out.println("command sent: " + command);
-        sendCommand(command);
-    }
-
     private String[] readMove() throws IOException {
         String[] moves = {"", ""};
         String line;
         while ((line = inputReader.readLine()) != null) {
+          //  System.out.println("Stockfish:" + line);
             if (line.startsWith("bestmove")) {
                 moves[0] = line.split(" ")[1];  // Extract the move from the response
-                moves[1] = line.split(" ")[3];
+                if (line.split(" ").length > 2)
+                    moves[1] = line.split(" ")[3];
                 break;
             }
         }
         return moves;
+    }
+
+    public boolean checkmate(String fen) throws IOException {
+        if (fen.isEmpty())
+            return false;
+        String toSend = "position fen " + fen + "\n";
+        sendCommand(toSend);
+        // Request the best move
+        toSend = "go movetime 10\n";
+        sendCommand(toSend);
+        String[] moves = readMove();
+        return moves[0].equalsIgnoreCase("(none)");        
     }
 
     public String getBestMove(String fen) throws IOException {
@@ -114,18 +129,6 @@ public class StockfishAI {
         return bestMove;  // Return the best move found
     }
 
-    public boolean checkmate(String fen) throws IOException {
-        if (fen.isEmpty())
-            return false;
-        String toSend = "position fen " + fen + "\n";
-        sendCommand(toSend);
-        // Request the best move
-        toSend = "go movetime 10\n";
-        sendCommand(toSend);
-        String[] moves = readMove();
-        return moves[0].equalsIgnoreCase("(none)");
-    }
-
     public void close() throws IOException {
         try {
             if (inputReader != null) {
@@ -141,5 +144,41 @@ public class StockfishAI {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public String getLegalMoves(String fen) throws IOException {
+        // Send the position in FEN format
+        String toSend = "position fen " + fen + "\n";
+        sendCommand(toSend);
+
+        // Request the perft command with depth 1
+        sendCommand("go perft 1\n");
+
+        String line;
+        StringBuilder legalMoves = new StringBuilder();
+        // Read Stockfish's response
+        while ((line = inputReader.readLine()) != null) {
+            //System.out.println("Stockfish: " + line);
+
+            // Look for the "Legal moves:" line
+            if (line.endsWith(": 1")) {
+                line = line.substring(0,4);
+                legalMoves.append(line).append(","); // Extract moves
+                //System.out.println(legalMoves);
+            }
+
+            // Break on a stopping point to avoid infinite loops
+            if (line.startsWith("Nodes searched")) {
+                break;
+
+           }
+
+
+        }
+
+        return legalMoves.toString();
+    }
+    public boolean checklLegalMoves(String move, String legalMoves){
+        String[] MoveArray = legalMoves.split(",");
+        return Arrays.asList(MoveArray).contains(move);
     }
 }

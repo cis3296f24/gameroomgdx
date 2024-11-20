@@ -33,8 +33,25 @@ public class GameManager extends ScreenAdapter {
     private boolean gameOver = false;
     private Stack<String> moveList;
     private ChessBoardScreen screen;
+    private String FEN;
+
+    public GameManager(int difficulty, String fen) throws IOException {
+        board = new Piece[8][8];
+        possibilities = new Blank[8][8];
+        whiteTurn = true;
+        castlingPieces = new Piece[6];
+        moveList = new Stack<>();
+        setupPieces();
+        parseFen(fen);
+        stockfishAI = new StockfishAI(DEPTH, difficulty);
+        printBoard();
+        halfMoves = 0;
+        castlingRights = "KQkq";
+        enPassantSquare = null;
+    }
 
     public GameManager(int difficulty) throws IOException {
+
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -80,36 +97,17 @@ public class GameManager extends ScreenAdapter {
             makeNextMove();
         }
         exitGame();
-        }
-
-        public void makeNextMove() {
-            if (whiteTurn)
-                playerTakeTurn(); // White player move logic
-            else
-                aiTurn(); // Black (AI) move logic
     }
 
-    private boolean playerTakeTurn() {
-
-        return true;
+    public void makeNextMove() {
+        if (whiteTurn)
+            playerTurn(); // White player move logic
+        else
+            aiTurn(); // Black (AI) move logic
     }
 
-    public boolean aiTakeTurn() {
-        String bestMove;
-        String fen;
-        boolean moved = false;
-        fen = generateFen();
-        try {
-            bestMove = getBestMove(fen);
-            System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
-            if (bestMove.equalsIgnoreCase("(none)"))
-                return false;
-            moved = movePiece(bestMove);
-            System.out.println("Move " + bestMove + ": " + moved);
-            printBoard();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private boolean playerTurn() {
+
         return true;
     }
 
@@ -123,12 +121,8 @@ public class GameManager extends ScreenAdapter {
                 try {
                     // Retrieve the best move from Stockfish after the delay
                     String bestMove = getBestMove(fen);
-
+                    
                     System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
-                    if (bestMove.equalsIgnoreCase("(none)")){
-                        System.out.println("checkmate");
-                        exitGame();
-                        return;}
                     boolean moved = movePiece(bestMove);
                     System.out.println("Move " + bestMove + ": " + moved);
                     //printBoard();
@@ -145,6 +139,10 @@ public class GameManager extends ScreenAdapter {
 
     public String getBestMove(String fen) throws IOException {
         return stockfishAI.getBestMove(fen);
+    }
+
+    public String getLegalMoves(String fen) throws IOException {
+        return stockfishAI.getLegalMoves(fen);
     }
 
     private void setupPieces() {
@@ -203,6 +201,18 @@ public class GameManager extends ScreenAdapter {
         if (move.isEmpty()) {
             return false;
         }
+        try{
+            String LegalMoves = getLegalMoves(fen);
+            if(!stockfishAI.checklLegalMoves(move, LegalMoves)){
+                System.out.println("Illegal move");
+                return false;
+
+            }
+
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+
         char[] parsedMove = parseMove(move);
         int startCol = parsedMove[0];
         int startRow = parsedMove[1];
@@ -395,7 +405,11 @@ public class GameManager extends ScreenAdapter {
         }
         return temp;
     }
+
     public void parseFen(String fen){
+        for(int i = 0; i < board.length; i++) {
+            Arrays.fill(board[i], null);
+        }
         int row = 7;
         int col = 0;
         for(int i = 0; i < fen.length(); i++){

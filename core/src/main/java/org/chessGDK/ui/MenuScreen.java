@@ -63,10 +63,42 @@ public class MenuScreen implements Screen {
         table.add(singleplayerButton).fillX().padBottom(15);
         table.row();
 
-        // Difficulty Level SelectBox
+        // Difficulty Level SelectBox with Tooltip
         selectBox = new SelectBox<>(skin);
         selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
-        difficultyText = "Difficulty Novice set - ELO: 800";
+
+        System.out.println("Default Difficulty Novice set - ELO: 800");
+
+        // Add a tooltip for each difficulty level
+        selectBox.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                String selectedLevel = selectBox.getSelected();
+                switch (selectedLevel) {
+                    case "Novice":
+                        tooltipLabel.setText("Ideal for beginners learning the basics of chess. (ELO: 800)");
+                        break;
+                    case "Intermediate":
+                        tooltipLabel.setText("For casual players familiar with fundamental tactics. (ELO: 1200)");
+                        break;
+                    case "Expert":
+                        tooltipLabel.setText("Challenging level for advanced players mastering strategy. (ELO: 1600)");
+                        break;
+                    case "Master":
+                        tooltipLabel.setText("Play against a high-level AI with professional skills. (ELO: 2000)");
+                        break;
+                }
+                tooltipLabel.setVisible(true);
+                positionTooltip(selectBox);
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                tooltipLabel.setVisible(false);
+            }
+        });
+
+        // Add a listener for difficulty changes
         selectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -100,19 +132,6 @@ public class MenuScreen implements Screen {
                         difficultyText = "Difficulty Master set - ELO: 2000";
                         break;
                 }
-            }
-        });
-        selectBox.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                tooltipLabel.setText(difficultyText);
-                tooltipLabel.setVisible(true);
-                positionTooltip(selectBox);
-            }
-
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                tooltipLabel.setVisible(false);
             }
         });
         selectBox.getList().addListener(new InputListener() {
@@ -168,6 +187,10 @@ public class MenuScreen implements Screen {
         TextButton freeModeButton = createMenuButton("Free Mode", "Play chess without any restrictions", screenManager::playFreeMode);
         table.add(freeModeButton).fillX().padBottom(15);
         table.row();
+        // Load Save State Button
+        TextButton loadButton = createMenuButton("Load", "Loads From Preexisting Save State", screenManager::loadSaveState);
+        table.add(loadButton).fillX().padBottom(15);
+        table.row();
 
         // Exit Button
         TextButton exitButton = createMenuButton("Exit", "Close the application", Gdx.app::exit);
@@ -204,16 +227,16 @@ public class MenuScreen implements Screen {
 
         return button;
     }
-    
-    private void positionTooltip(Actor button) {
-        float tooltipX = button.getX() + button.getWidth() + 10; // Position to the right of the button
-        float tooltipY = button.getY() + button.getHeight() / 2; // Center vertically with the button
+
+    private void positionTooltip(Actor actor) {
+        float tooltipX = actor.getX() + actor.getWidth() + 10; // Position to the right of the actor
+        float tooltipY = actor.getY() + actor.getHeight() / 2; // Center vertically with the actor
 
         // Check if tooltip goes out of screen bounds, adjust if necessary
         if (tooltipX + tooltipLabel.getWidth() > Gdx.graphics.getWidth()) {
-            // Place tooltip above the button if it goes off the right edge
-            tooltipX = button.getX();
-            tooltipY = button.getY() + button.getHeight() + 10;
+            // Place tooltip above the actor if it goes off the right edge
+            tooltipX = actor.getX();
+            tooltipY = actor.getY() + actor.getHeight() + 10;
         }
 
         // Update the tooltip label position
