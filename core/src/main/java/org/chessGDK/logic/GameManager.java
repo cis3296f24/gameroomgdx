@@ -111,6 +111,18 @@ public class GameManager extends ScreenAdapter {
         if (move.isEmpty()) {
             return false;
         }
+        try{
+            String LegalMoves = getLegalMoves(fen);
+            if(!stockfishAI.checklLegalMoves(move, LegalMoves)){
+                System.out.println("Illegal move");
+                return false;
+
+            }
+
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+
         char[] parsedMove = parseMove(move);
         int startCol = parsedMove[0];
         int startRow = parsedMove[1];
@@ -359,13 +371,13 @@ public class GameManager extends ScreenAdapter {
     public boolean aiTurn() {
         String fen;
         fen = generateFen();
-
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
                 try {
                     // Retrieve the best move from Stockfish after the delay
                     String bestMove = getBestMove(fen);
+                    System.out.println(getLegalMoves(fen));
 
                     System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
                     if (bestMove.equalsIgnoreCase("(none)")){
@@ -387,6 +399,10 @@ public class GameManager extends ScreenAdapter {
     public String getBestMove(String fen) throws IOException {
         return stockfishAI.getBestMove(fen);
     }
+    public String getLegalMoves(String fen) throws IOException {
+        return stockfishAI.getLegalMoves(fen);
+    }
+
 
 
     public StockfishAI getAI() {
@@ -437,6 +453,7 @@ public class GameManager extends ScreenAdapter {
         }
         // Perform any other cleanup needed for the game
         System.out.println("Game exited.");
+
        // go back to menu
 
     }

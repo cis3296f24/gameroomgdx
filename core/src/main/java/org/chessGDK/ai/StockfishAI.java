@@ -2,9 +2,10 @@ package org.chessGDK.ai;
 
 import java.io.*;
 import java.lang.ProcessBuilder;
+import java.util.Arrays;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-
+import java.util.ArrayList;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
@@ -80,6 +81,7 @@ public class StockfishAI {
         String[] moves = {"", ""};
         String line;
         while ((line = inputReader.readLine()) != null) {
+          //  System.out.println("Stockfish:" + line);
             if (line.startsWith("bestmove")) {
                 moves[0] = line.split(" ")[1];  // Extract the move from the response
                 if (line.split(" ").length > 2)
@@ -137,5 +139,41 @@ public class StockfishAI {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public String getLegalMoves(String fen) throws IOException {
+        // Send the position in FEN format
+        String toSend = "position fen " + fen + "\n";
+        sendCommand(toSend);
+
+        // Request the perft command with depth 1
+        sendCommand("go perft 1\n");
+
+        String line;
+        StringBuilder legalMoves = new StringBuilder();
+        // Read Stockfish's response
+        while ((line = inputReader.readLine()) != null) {
+            //System.out.println("Stockfish: " + line);
+
+            // Look for the "Legal moves:" line
+            if (line.endsWith(": 1")) {
+                line = line.substring(0,4);
+                legalMoves.append(line).append(","); // Extract moves
+                //System.out.println(legalMoves);
+            }
+
+            // Break on a stopping point to avoid infinite loops
+            if (line.startsWith("Nodes searched")) {
+                break;
+
+           }
+
+
+        }
+
+        return legalMoves.toString();
+    }
+    public boolean checklLegalMoves(String move, String legalMoves){
+        String[] MoveArray = legalMoves.split(",");
+        return Arrays.asList(MoveArray).contains(move);
     }
 }
