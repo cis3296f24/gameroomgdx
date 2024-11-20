@@ -71,6 +71,23 @@ public class ScreenManager extends Game {
         this.setScreen(chessBoardScreen);
     }
 
+    // Add other methods to manage game state, screens, etc.
+    public void loadSaveState() {
+        try {
+            String fen = "rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R";
+            gm = new GameManager(difficulty, fen);
+            chessBoardScreen = new ChessBoardScreen(this);
+            chessBoardScreen.loadTextures(gm);
+            //chessBoardScreen.addButtons(gm);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Set the screen to Chess
+        this.setScreen(chessBoardScreen);
+    }
+
 
     @Override
     public void render() {

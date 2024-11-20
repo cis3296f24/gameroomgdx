@@ -6,11 +6,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
-import org.chessGDK.ui.ChessBoardScreen;
+import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -29,8 +28,26 @@ public class GameManager extends ScreenAdapter {
     private String enPassantSquare;
     private String FEN;
 
-    public GameManager(int difficulty, String FEN) throws IOException {
-        this.FEN = FEN;
+
+
+
+    public GameManager(int difficulty, String fen) throws IOException {
+        board = new Piece[8][8];
+        possibilities = new Blank[8][8];
+        whiteTurn = true;
+        castlingPieces = new Piece[6];
+        setupPieces();
+        parseFen(fen);
+        stockfishAI = new StockfishAI(DEPTH, difficulty);
+        printBoard();
+        halfMoves = 0;
+        castlingRights = "KQkq";
+        enPassantSquare = null;
+    }
+
+
+    public GameManager(int difficulty) throws IOException {
+
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -92,15 +109,6 @@ public class GameManager extends ScreenAdapter {
                 possibilities[i][j] = new Blank();
             }
         }
-
-        for(int i = 0; i < board.length; i++) {
-            Arrays.fill(board[i], null);
-        }
-
-
-        parseFen(FEN);
-
-
     }
 
     public boolean movePiece(String move) {
@@ -109,6 +117,18 @@ public class GameManager extends ScreenAdapter {
         if (move.isEmpty()) {
             return false;
         }
+        try{
+            String LegalMoves = getLegalMoves(fen);
+            if(!stockfishAI.checklLegalMoves(move, LegalMoves)){
+                System.out.println("Illegal move");
+                return false;
+
+            }
+
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+
         char[] parsedMove = parseMove(move);
         int startCol = parsedMove[0];
         int startRow = parsedMove[1];
@@ -136,13 +156,10 @@ public class GameManager extends ScreenAdapter {
             }
             //piece.toggleAnimating();
             printBoard();
-
-            checkforcheckmate(fen);
-
-
             whiteTurn = !whiteTurn;
             halfMoves++;
             piece.setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
+            checkforcheckmate(fen);
             makeNextMove();
             return true;
         }
@@ -166,9 +183,8 @@ public class GameManager extends ScreenAdapter {
     }
     private void checkforcheckmate(String fen) {
                 try {
-                    String bestMove = getBestMove(fen);
                     //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if(bestMove.equalsIgnoreCase("(none)")){
+                    if(stockfishAI.checkmate(fen)){
                         System.out.println("checkmate");
                         exitGame();
                     }
@@ -177,22 +193,27 @@ public class GameManager extends ScreenAdapter {
                 }
 
     }
+    
     private boolean promote(char rank, int endRow, int endCol) {
         return switch (rank) {
             case 'q' -> {
                 board[endRow][endCol] = new Queen(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             case 'r' -> {
                 board[endRow][endCol] = new Rook(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             case 'b' -> {
                 board[endRow][endCol] = new Bishop(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             case 'n' -> {
                 board[endRow][endCol] = new Knight(whiteTurn);
+                board[endRow][endCol].setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
                 yield true;
             }
             default -> false;
@@ -291,6 +312,9 @@ public class GameManager extends ScreenAdapter {
         return temp;
     }
     public void parseFen(String fen){
+        for(int i = 0; i < board.length; i++) {
+            Arrays.fill(board[i], null);
+        }
         int row = 7;
         int col = 0;
         for(int i = 0; i < fen.length(); i++){
@@ -313,7 +337,7 @@ public class GameManager extends ScreenAdapter {
     public void makeNextMove() {
         synchronized (turnLock) {  // Use synchronized block to ensure only one thread runs this section at a time
             if (whiteTurn) {
-                boolean moveMade = playerTakeTurn(); // White player move logic
+                boolean moveMade = playerTurn(); // White player move logic
                 if (!moveMade) {
                     System.out.println("White move failed");
                 }
@@ -326,7 +350,7 @@ public class GameManager extends ScreenAdapter {
         }
     }
 
-    private boolean playerTakeTurn() {
+    private boolean playerTurn() {
 
         return true;
     }
@@ -353,13 +377,13 @@ public class GameManager extends ScreenAdapter {
     public boolean aiTurn() {
         String fen;
         fen = generateFen();
-
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
                 try {
                     // Retrieve the best move from Stockfish after the delay
                     String bestMove = getBestMove(fen);
+                    System.out.println(getLegalMoves(fen));
 
                     System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
                     if (bestMove.equalsIgnoreCase("(none)")){
@@ -381,6 +405,10 @@ public class GameManager extends ScreenAdapter {
     public String getBestMove(String fen) throws IOException {
         return stockfishAI.getBestMove(fen);
     }
+    public String getLegalMoves(String fen) throws IOException {
+        return stockfishAI.getLegalMoves(fen);
+    }
+
 
 
     public StockfishAI getAI() {
@@ -431,6 +459,7 @@ public class GameManager extends ScreenAdapter {
         }
         // Perform any other cleanup needed for the game
         System.out.println("Game exited.");
+
        // go back to menu
 
     }

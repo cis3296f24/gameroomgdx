@@ -122,6 +122,16 @@ public class MenuScreen implements Screen {
         table.add(puzzleButton).fillX().padBottom(15);
         table.row();
 
+        // Load Save State Button
+        TextButton loadButton = createMenuButton("Load", "Loads From Preexisting Save State");
+        loadButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                screenManager.loadSaveState();
+            }
+        });
+        table.add(loadButton).fillX().padBottom(15);
+        table.row();
+
         // Exit Button
         TextButton exitButton = createMenuButton("Exit", "Close the application");
         exitButton.addListener(new ClickListener() {
