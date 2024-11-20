@@ -26,6 +26,10 @@ public class GameManager extends ScreenAdapter {
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
+    private String FEN;
+
+
+
 
     public GameManager(int difficulty, String fen) throws IOException {
         board = new Piece[8][8];
@@ -43,6 +47,7 @@ public class GameManager extends ScreenAdapter {
 
 
     public GameManager(int difficulty) throws IOException {
+
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -54,6 +59,7 @@ public class GameManager extends ScreenAdapter {
         castlingRights = "KQkq";
         enPassantSquare = null;
     }
+
 
     private void setupPieces() {
         // Place white pawns on the second row (index 1)
