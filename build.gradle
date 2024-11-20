@@ -17,9 +17,10 @@ buildscript {
 
 
 allprojects {
+  def target = layout.buildDirectory.dir("winX64/roast/")
   apply plugin: 'eclipse'
   apply plugin: 'idea'
-
+  def javaVersion = project.findProperty("javaVersion")
   // This allows you to "Build and run using IntelliJ IDEA", an option in IDEA's Settings.
   idea {
     module {
@@ -28,13 +29,23 @@ allprojects {
     }
   }
   tasks.withType(JavaExec) {
-    jvmArgs = ["-Droot.path=${project.rootDir}"]
+    jvmArgs = ["-Droot.path=${project.rootDir}/", "-Dassets.path=${project.rootDir}/assets/"]
+    println "Gradle is using java.home: ${System.getProperty('java.home')}"
+    println "Gradle is using java.version: ${System.getProperty('java.version')}"
+  }
+  tasks.withType(Jar) {
+    manifest {
+      attributes(
+      'Root-Path': "${rootDir}/", // Embeds the assets path
+      'Assets-Path': "${rootDir}/assets/" // Embeds the assets path
+      )
+    }
   }
 }
 
 configure(subprojects) {
   apply plugin: 'java-library'
-  sourceCompatibility = 21
+  sourceCompatibility = javaVersion.toInteger()
 
   // From https://lyze.dev/2021/04/29/libGDX-Internal-Assets-List/
   // The article can be helpful when using assets.txt in your project.
@@ -62,7 +73,7 @@ configure(subprojects) {
 }
 
 subprojects {
-  version = '$projectVersion'
+  version = "${projectVersion}"
   ext.appName = 'ChessGDK'
   repositories {
     mavenCentral()
