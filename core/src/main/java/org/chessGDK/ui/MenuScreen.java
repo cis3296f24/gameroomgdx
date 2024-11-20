@@ -97,43 +97,6 @@ public class MenuScreen implements Screen {
                 tooltipLabel.setVisible(false);
             }
         });
-
-        // Add a listener for difficulty changes
-        selectBox.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                String selectedLevel = selectBox.getSelected();
-                int difficulty;
-                tooltipLabel.setVisible(false);
-
-                switch (selectedLevel) {
-                    case "Novice":
-                        difficulty = 0;
-                        screenManager.setDifficulty(difficulty);
-                        System.out.println("Difficulty Novice set - ELO: 800");
-                        difficultyText = "Difficulty Novice set - ELO: 800";
-                        break;
-                    case "Intermediate":
-                        difficulty = 2;
-                        screenManager.setDifficulty(difficulty);
-                        System.out.println("Difficulty Intermediate set - ELO: 1200");
-                        difficultyText = "Difficulty Intermediate set - ELO: 1200";
-                        break;
-                    case "Expert":
-                        difficulty = 5;
-                        screenManager.setDifficulty(difficulty);
-                        System.out.println("Difficulty Expert set - ELO: 1600");
-                        difficultyText = "Difficulty Expert set - ELO: 1600";
-                        break;
-                    case "Master":
-                        difficulty = 9;
-                        screenManager.setDifficulty(difficulty);
-                        System.out.println("Difficulty Master set - ELO: 2000");
-                        difficultyText = "Difficulty Master set - ELO: 2000";
-                        break;
-                }
-            }
-        });
         selectBox.getList().addListener(new InputListener() {
             @Override
             public boolean mouseMoved(InputEvent event, float x, float y) {
@@ -168,6 +131,42 @@ public class MenuScreen implements Screen {
                     }
                 }
                 return super.mouseMoved(event, x, y);
+            }
+        });
+        // Add a listener for difficulty changes
+        selectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String selectedLevel = selectBox.getSelected();
+                int difficulty;
+                tooltipLabel.setVisible(false);
+
+                switch (selectedLevel) {
+                    case "Novice":
+                        difficulty = 0;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Novice set - ELO: 800");
+                        difficultyText = "Difficulty Novice set - ELO: 800";
+                        break;
+                    case "Intermediate":
+                        difficulty = 2;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Intermediate set - ELO: 1200");
+                        difficultyText = "Difficulty Intermediate set - ELO: 1200";
+                        break;
+                    case "Expert":
+                        difficulty = 5;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Expert set - ELO: 1600");
+                        difficultyText = "Difficulty Expert set - ELO: 1600";
+                        break;
+                    case "Master":
+                        difficulty = 9;
+                        screenManager.setDifficulty(difficulty);
+                        System.out.println("Difficulty Master set - ELO: 2000");
+                        difficultyText = "Difficulty Master set - ELO: 2000";
+                        break;
+                }
             }
         });
         table.add(selectBox).padBottom(15);
