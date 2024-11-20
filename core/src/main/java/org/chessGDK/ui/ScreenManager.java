@@ -56,15 +56,16 @@ public class ScreenManager extends Game {
             puzzle = new puzzleFENs();
             FEN = puzzle.getRandomPuzzle();
             gm = new GameManager(difficulty, FEN);
-            puzzleScreen = new PuzzleScreen(this);
+            puzzleScreen = getPuzzleScreen();
             puzzleScreen.loadTextures(gm);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         // Set the screen to Chess
         this.setScreen(puzzleScreen);
+        menuScreen.dispose();
+        menuScreen = null;
     }
 
     public void setDifficulty(int difficulty){
@@ -155,6 +156,13 @@ public class ScreenManager extends Game {
             pauseScreen = new PauseScreen();
         }
         return pauseScreen;
+    }
+
+    public PuzzleScreen getPuzzleScreen() {
+        if (puzzleScreen == null) {
+            puzzleScreen = new PuzzleScreen();
+        }
+        return puzzleScreen;
     }
 
     public void togglePause() {

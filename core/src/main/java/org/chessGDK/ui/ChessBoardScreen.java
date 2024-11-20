@@ -1,18 +1,12 @@
 package org.chessGDK.ui;
 
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
+
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.*;
 
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.Screen;
@@ -25,32 +19,20 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 /** First screen of the application. Displayed after the application is created. */
 public class ChessBoardScreen implements Screen {
     private final SpriteBatch batch;
-    /*
-    private Texture whitePawnTexture, blackPawnTexture, whiteRookTexture, blackRookTexture,
-                    whiteKnightTexture, blackKnightTexture, whiteBishopTexture, blackBishopTexture,
-                    whiteQueenTexture, blackQueenTexture, whiteKingTexture, blackKingTexture;
 
-     */
     private Texture boardTexture;
     private static int TILE_SIZE = Gdx.graphics.getWidth()/8;
     private Piece[][] board;
     private Blank[][] possibilities;
-    private GameManager gm;
     public Stage stage;
     private Skin skin;
     private PieceInputHandler inputHandler;
-
-    // Variables for piece movement animation
-    private Vector2 startPosition, targetPosition;
-    private final Array<PieceAnimation> activeAnimations = new Array<>();
     private OrthographicCamera camera;
-    private ScreenManager sm;
 
     public ChessBoardScreen() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera(); // Initialize the camera
         camera.setToOrtho(false, 800, 800); // Set the viewport size
-        this.sm = ScreenManager.getInstance();
 
         // Initialize the Stage and Skin for Buttons (not in use)
         stage = new Stage(new ScreenViewport());
@@ -60,7 +42,6 @@ public class ChessBoardScreen implements Screen {
 
     public void loadTextures(GameManager gm) {
         boardTexture = new Texture("brown.png");
-        this.gm = gm;
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
         inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
@@ -92,14 +73,7 @@ public class ChessBoardScreen implements Screen {
         // Draw the chessboard (you can later add pieces and other elements)
         batch.draw(boardTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        /*
-        if (animatedPiece != null && animatedPiece.isAnimating())
-            animatePiece(delta);
-
-         */
-        //updateAnimations(delta);
-        drawPieces();
-
+        drawPossibilities();
 
         batch.end();
 
@@ -108,15 +82,11 @@ public class ChessBoardScreen implements Screen {
         stage.draw();
     }
 
-
-    private void drawPieces() {
+    private void drawPossibilities() {
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
-                Piece piece = board[i][j];
                 Blank b = possibilities[i][j];
                 batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE);
-                if (piece == null || piece.isAnimating()) continue;
-                //batch.draw(piece.getTexture(), piece.getX(), piece.getY(), TILE_SIZE, TILE_SIZE - 5);
             }
         }
     }

@@ -178,7 +178,7 @@ public class MenuScreen implements Screen {
         table.row();
 
         // Puzzle Button
-        TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles", screenManager::playChess);
+        TextButton puzzleButton = createMenuButton("Puzzle", "Try solving chess puzzles", screenManager::playPuzzle);
         table.add(puzzleButton).fillX().padBottom(15);
         table.row();
 
