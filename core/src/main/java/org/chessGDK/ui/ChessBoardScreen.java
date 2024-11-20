@@ -28,6 +28,7 @@ public class ChessBoardScreen implements Screen {
     private Skin skin;
     private PieceInputHandler inputHandler;
     private OrthographicCamera camera;
+    private puzzleFENs puzzle;
 
     public ChessBoardScreen() {
         batch = new SpriteBatch();
