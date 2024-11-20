@@ -3,13 +3,19 @@ package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
+
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
+import org.chessGDK.ui.ChessBoardScreen;
+import org.chessGDK.ui.ScreenManager;
+
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Stack;
 
 
 public class GameManager extends ScreenAdapter {
@@ -23,18 +29,122 @@ public class GameManager extends ScreenAdapter {
     private int halfMoves;
     private String castlingRights;
     private String enPassantSquare;
+    private boolean freeMode = false;
+    private boolean gameOver = false;
+    private Stack<String> moveList;
+    private ChessBoardScreen screen;
 
     public GameManager(int difficulty) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
         castlingPieces = new Piece[6];
+        moveList = new Stack<>();
         setupPieces();
-        stockfishAI = new StockfishAI(DEPTH, difficulty);
+        if (difficulty == -1) {
+            freeMode = true;
+        }
+        if (freeMode)
+            stockfishAI = null;
+        else
+            stockfishAI = new StockfishAI(DEPTH, difficulty);
         printBoard();
         halfMoves = 0;
         castlingRights = "KQkq";
         enPassantSquare = null;
+        screen = ScreenManager.getInstance().getChessBoardScreen();
+    }
+
+    public void startGameLoopThread() {
+        new Thread(this::startGameLoop){{setDaemon(true);}}.start();
+    }
+
+    public void notifyMoveMade() {
+        synchronized (turnLock) {
+            turnLock.notifyAll(); // Notify the game loop that a move has been made
+        }
+    }
+
+    private void startGameLoop() {
+        // Start the game loop
+        while (!gameOver) {
+            synchronized (turnLock) {
+                // Make the next move
+                try {
+                    turnLock.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    gameOver = true;
+                }
+            }
+            makeNextMove();
+        }
+        exitGame();
+        }
+
+        public void makeNextMove() {
+            if (whiteTurn)
+                playerTakeTurn(); // White player move logic
+            else
+                aiTurn(); // Black (AI) move logic
+    }
+
+    private boolean playerTakeTurn() {
+
+        return true;
+    }
+
+    public boolean aiTakeTurn() {
+        String bestMove;
+        String fen;
+        boolean moved = false;
+        fen = generateFen();
+        try {
+            bestMove = getBestMove(fen);
+            System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
+            if (bestMove.equalsIgnoreCase("(none)"))
+                return false;
+            moved = movePiece(bestMove);
+            System.out.println("Move " + bestMove + ": " + moved);
+            printBoard();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
+
+    public boolean aiTurn() {
+        String fen;
+        fen = generateFen();
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                try {
+                    // Retrieve the best move from Stockfish after the delay
+                    String bestMove = getBestMove(fen);
+
+                    System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
+                    if (bestMove.equalsIgnoreCase("(none)")){
+                        System.out.println("checkmate");
+                        exitGame();
+                        return;}
+                    boolean moved = movePiece(bestMove);
+                    System.out.println("Move " + bestMove + ": " + moved);
+                    //printBoard();
+                    checkforcheckmate(generateFen());
+                    notifyMoveMade();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, .5f); // Delay by .5 second
+
+        return true;
+    }
+
+    public String getBestMove(String fen) throws IOException {
+        return stockfishAI.getBestMove(fen);
     }
 
     private void setupPieces() {
@@ -85,13 +195,6 @@ public class GameManager extends ScreenAdapter {
                 possibilities[i][j] = new Blank();
             }
         }
-
-        for(int i = 0; i < board.length; i++) {
-            Arrays.fill(board[i], null);
-        }
-
-        parseFen("rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R");
-
     }
 
     public boolean movePiece(String move) {
@@ -107,11 +210,19 @@ public class GameManager extends ScreenAdapter {
         int endRow = parsedMove[3];
         char newRank;
         Piece piece = board[startRow][startCol];
+        Piece contested = board[endRow][endCol];
         System.out.println(startCol);
         enPassantSquare = null;
-
         // Ensure the right piece color is moving according to the turn
         if (piece != null && piece.isValidMove(startCol, startRow, endCol, endRow, board)) {
+            if (contested != null) {
+                contested.remove();
+            }
+            float targetX = endCol * Gdx.graphics.getHeight()/8f;
+            float targetY = endRow * Gdx.graphics.getHeight()/8f;
+            float duration = 1.0f;
+            piece.setVisible(true);
+            piece.addAction(Actions.moveTo(targetX, targetY, duration));
             board[endRow][endCol] = piece;
             board[startRow][startCol] = null;
             //screen.startPieceAnimation(piece, startCol, startRow, endCol, endRow);
@@ -128,15 +239,22 @@ public class GameManager extends ScreenAdapter {
             //piece.toggleAnimating();
             printBoard();
 
-            checkforcheckmate(fen);
+            if(!freeMode)
+                checkforcheckmate(fen);
 
             whiteTurn = !whiteTurn;
             halfMoves++;
             piece.setPosition(endCol * Gdx.graphics.getWidth()/8, endRow * Gdx.graphics.getHeight()/8);
-            makeNextMove();
+            moveList.push(move);
             return true;
         }
         return false;
+    }
+
+    public void undo() {
+        String move = moveList.pop();
+        char[] temp = parseMove(move);
+        board[temp[2]][temp[3]].setPosition(temp[0], temp[1]);
     }
 
     private static char[] parseMove(String bestMove) {
@@ -154,41 +272,36 @@ public class GameManager extends ScreenAdapter {
         parsed[3] -= '1';
         return parsed;
     }
-
     private void checkforcheckmate(String fen) {
                 try {
-                    String bestMove = getBestMove(fen);
                     //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if(bestMove.equalsIgnoreCase("(none)")){
+                    if(stockfishAI.checkmate(fen)){
                         System.out.println("checkmate");
-                        exitGame();
+                        gameOver = true;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
     }
-    
+
     private boolean promote(char rank, int endRow, int endCol) {
-        return switch (rank) {
-            case 'q' -> {
+        switch (rank) {
+            case 'q':
                 board[endRow][endCol] = new Queen(whiteTurn);
-                yield true;
-            }
-            case 'r' -> {
+                return true;
+            case 'r':
                 board[endRow][endCol] = new Rook(whiteTurn);
-                yield true;
-            }
-            case 'b' -> {
+                return true;
+            case 'b':
                 board[endRow][endCol] = new Bishop(whiteTurn);
-                yield true;
-            }
-            case 'n' -> {
+                return true;
+            case 'n':
                 board[endRow][endCol] = new Knight(whiteTurn);
-                yield true;
-            }
-            default -> false;
-        };
+                return true;
+            default:
+                return false;
+        }
     }
 
     public String generateFen() {
@@ -302,76 +415,9 @@ public class GameManager extends ScreenAdapter {
         }
     }
 
-    public void makeNextMove() {
-        synchronized (turnLock) {  // Use synchronized block to ensure only one thread runs this section at a time
-            if (whiteTurn) {
-                boolean moveMade = playerTakeTurn(); // White player move logic
-                if (!moveMade) {
-                    System.out.println("White move failed");
-                }
-            } else {
-                boolean moveMade = aiTurn(); // Black (AI) move logic
-                if (!moveMade) {
-                    System.out.println("Black move failed");
-                }
-            }
-        }
-    }
 
-    private boolean playerTakeTurn() {
-
-        return true;
-    }
-
-    public boolean aiTakeTurn() {
-        String bestMove;
-        String fen;
-        boolean moved = false;
-        fen = generateFen();
-        try {
-            bestMove = getBestMove(fen);
-            System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
-            if (bestMove.equalsIgnoreCase("(none)"))
-                return false;
-            moved = movePiece(bestMove);
-            System.out.println("Move " + bestMove + ": " + moved);
-            printBoard();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return true;
-    }
-
-    public boolean aiTurn() {
-        String fen;
-        fen = generateFen();
-
-        Timer.schedule(new Timer.Task() {
-            @Override
-            public void run() {
-                try {
-                    // Retrieve the best move from Stockfish after the delay
-                    String bestMove = getBestMove(fen);
-
-                    System.out.println("FEN: " + fen + "\nBest Move: " + bestMove);
-                    if (bestMove.equalsIgnoreCase("(none)")){
-                        System.out.println("checkmate");
-                        exitGame();
-                        return;}
-                    boolean moved = movePiece(bestMove);
-                    System.out.println("Move " + bestMove + ": " + moved);
-                    //printBoard();
-                    checkforcheckmate(generateFen());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, .5f); // Delay by .5 second
-        return true;
-    }
-
-    public String getBestMove(String fen) throws IOException {
-        return stockfishAI.getBestMove(fen);
+    public StockfishAI getAI() {
+        return stockfishAI;
     }
 
     public boolean isWhiteTurn() {
@@ -417,8 +463,6 @@ public class GameManager extends ScreenAdapter {
             }
         }
         // Perform any other cleanup needed for the game
-        System.out.println("Game exited.");
-       // go back to menu
-
+        System.out.println("GameManager closed.");
     }
 }
