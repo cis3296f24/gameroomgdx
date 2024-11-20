@@ -1,15 +1,13 @@
 package org.chessGDK.pieces;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
-public abstract class Piece {
+public abstract class Piece extends Actor {
     protected boolean isWhite;
     private Texture pieceTexture;
     private boolean animating;
-    private float xPos;
-    private float yPos;
     public Piece(boolean isWhite) {
         this.isWhite = isWhite;
         String texturePath = "Chess_" +
@@ -45,18 +43,13 @@ public abstract class Piece {
     public void toggleAnimating() {
         animating = !animating;
     }
-
-    public float getXPos() {
-        return xPos;
-    }
-    public float getYPos() {
-        return yPos;
-    }
-    public void setPosition(float x, float y) {
-        xPos = x;
-        yPos = y;
+    public void draw(Batch batch, float parentAlpha) {
+        if (getTexture() != null) {
+            batch.draw(getTexture(), getX(), getY(), getWidth(), getHeight());
+        }
     }
 
+    public abstract Piece copy();
     public boolean enPassant() {
         return false;
     }

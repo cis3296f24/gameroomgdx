@@ -1,13 +1,18 @@
 package org.chessGDK.ui;
 
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.*;
 
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.Screen;
@@ -31,7 +36,7 @@ public class ChessBoardScreen implements Screen {
     private Piece[][] board;
     private Blank[][] possibilities;
     private GameManager gm;
-    private Stage stage;
+    public Stage stage;
     private Skin skin;
     private PieceInputHandler inputHandler;
 
@@ -39,15 +44,16 @@ public class ChessBoardScreen implements Screen {
     private Vector2 startPosition, targetPosition;
     private final Array<PieceAnimation> activeAnimations = new Array<>();
     private OrthographicCamera camera;
+    private ScreenManager sm;
 
     public ChessBoardScreen() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera(); // Initialize the camera
         camera.setToOrtho(false, 800, 800); // Set the viewport size
+        this.sm = ScreenManager.getInstance();
 
         // Initialize the Stage and Skin for Buttons (not in use)
         stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(stage); // Set the stage to handle input
         skin = new Skin(Gdx.files.internal("uiskin.json")); // Load your skin file
 
     }
@@ -67,6 +73,10 @@ public class ChessBoardScreen implements Screen {
                 b.setPosition(j*TILE_SIZE, i*TILE_SIZE);
                 if (piece != null) {
                     piece.setPosition(j*TILE_SIZE, i*TILE_SIZE);
+                    piece.setWidth(TILE_SIZE);
+                    piece.setHeight(TILE_SIZE - 5);
+                    piece.setVisible(true);
+                    stage.addActor(piece);
                 }
             }
         }
@@ -87,7 +97,7 @@ public class ChessBoardScreen implements Screen {
             animatePiece(delta);
 
          */
-        updateAnimations(delta);
+        //updateAnimations(delta);
         drawPieces();
 
 
@@ -98,27 +108,6 @@ public class ChessBoardScreen implements Screen {
         stage.draw();
     }
 
-    // Method to start the animation
-    public void startPieceAnimation(Piece piece, int startX, int startY, int endX, int endY) {
-        startPosition = new Vector2(startX * TILE_SIZE, startY * TILE_SIZE);
-        targetPosition = new Vector2(endX * TILE_SIZE, endY * TILE_SIZE);
-        activeAnimations.add(new PieceAnimation(piece, startPosition, targetPosition));
-    }
-
-    public void updateAnimations(float delta) {
-        for (PieceAnimation animation : activeAnimations) {
-            animation.update(delta);  // Delta is passed to ensure frame-rate independence
-
-            // Draw the animated piece
-            Texture pieceTexture = animation.piece.getTexture();
-            batch.draw(pieceTexture, animation.startPosition.x, animation.startPosition.y, TILE_SIZE, TILE_SIZE - 5);
-
-            if (animation.isDone()) {
-                animation.piece.toggleAnimating();
-                activeAnimations.removeValue(animation, true); // Remove the animation if done
-            }
-        }
-    }
 
     private void drawPieces() {
         for (int i = 0; i < board.length; i++) {
@@ -127,19 +116,16 @@ public class ChessBoardScreen implements Screen {
                 Blank b = possibilities[i][j];
                 batch.draw(b.getTexture(), b.getXPos(), b.getYPos(), TILE_SIZE, TILE_SIZE);
                 if (piece == null || piece.isAnimating()) continue;
-                batch.draw(piece.getTexture(), piece.getXPos(), piece.getYPos(), TILE_SIZE, TILE_SIZE - 5);
+                //batch.draw(piece.getTexture(), piece.getX(), piece.getY(), TILE_SIZE, TILE_SIZE - 5);
             }
         }
     }
 
     @Override
     public void dispose() {
-        // Dispose of the textures when they are no longer needed
-        boardTexture.dispose();
-        batch.dispose();
         stage.dispose();
         skin.dispose();
-        gm.exitGame();
+        System.out.println("ChessBoardScreen disposed");
     }
 
     @Override

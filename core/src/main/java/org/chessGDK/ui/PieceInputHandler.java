@@ -9,7 +9,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-
 import org.chessGDK.utils.CoordinateUtils;
 
 import com.badlogic.gdx.graphics.Texture;
@@ -26,6 +25,7 @@ public class PieceInputHandler extends InputAdapter {
     private final Camera camera;
     private final Piece[][] board;
     private final Blank[][] possibilities;
+    private final int TILE_SIZE;
 
     private CoordinateUtils coords;
 
@@ -34,7 +34,8 @@ public class PieceInputHandler extends InputAdapter {
         this.camera = camera;
         this.board = board;
         this.possibilities = p;
-        coords = new CoordinateUtils(tileSize);
+        this.TILE_SIZE = tileSize;
+        coords = new CoordinateUtils(TILE_SIZE);
     }
 
     @Override
@@ -139,6 +140,7 @@ public class PieceInputHandler extends InputAdapter {
             placeY -= '1';
             isDragging = false;
             clearPossible();
+            gm.notifyMoveMade();
         } else {
             startPos.x -= 'a';
             startPos.y -= '1';
@@ -148,7 +150,7 @@ public class PieceInputHandler extends InputAdapter {
         selectedPiece = null;  // Reset selection
         startPos = null;
     }
-    
+
     private void showPossible(int oldX, int oldY) {
         for(int col = 0; col <8; ++col){
             for(int row = 0; row<8; ++row){
@@ -159,7 +161,7 @@ public class PieceInputHandler extends InputAdapter {
             }
         }
     }
-    
+
     private void clearPossible() {
         for(int col = 0; col <8; ++col){
             for(int row = 0; row<8; ++row){

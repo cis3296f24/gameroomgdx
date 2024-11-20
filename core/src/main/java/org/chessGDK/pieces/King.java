@@ -57,4 +57,8 @@ public class King extends Piece{
     public String toString() {
         return isWhite() ? "K" : "k";
     }
+
+    public Piece copy() {
+        return new King(this.isWhite);
+    }
 }

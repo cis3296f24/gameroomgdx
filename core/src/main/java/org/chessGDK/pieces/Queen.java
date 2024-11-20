@@ -38,4 +38,8 @@ public class Queen extends Piece{
     public String toString() {
         return isWhite() ? "Q" : "q";
     }
+
+    public Piece copy() {
+        return new Queen(this.isWhite);
+    }
 }

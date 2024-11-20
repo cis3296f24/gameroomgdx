@@ -51,10 +51,29 @@ public class ScreenManager extends Game {
         this.difficulty = difficulty;
     }
 
-    // Add other methods to manage game state, screens, etc.    
+    // Add other methods to manage game state, screens, etc.
     public void playChess() {
         try {
             gm = new GameManager(difficulty);
+            chessBoardScreen = getChessBoardScreen();
+            pauseScreen = getPauseScreen();
+            chessBoardScreen.loadTextures(gm);
+            gm.startGameLoopThread();
+            //chessBoardScreen.addButtons(gm);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Set the screen to Chess
+        this.setScreen(chessBoardScreen);
+        menuScreen.dispose();
+        menuScreen = null;
+    }
+
+    public void playFreeMode() {
+        try {
+            gm = new GameManager(-1);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -66,6 +85,22 @@ public class ScreenManager extends Game {
 
         // Set the screen to Chess
         this.setScreen(chessBoardScreen);
+        menuScreen.dispose();
+        menuScreen = null;
+    }
+
+    public void exitChess() {
+        // Set the screen to Menu
+        gm.exitGame();
+        gm = null;
+        chessBoardScreen.dispose();
+        chessBoardScreen = null;
+        this.setScreen(getMenuScreen());
+        pauseScreen.dispose();
+        pauseScreen = null;
+        if(paused){
+            paused = false;
+        }
     }
 
     public MenuScreen getMenuScreen() {
@@ -74,7 +109,7 @@ public class ScreenManager extends Game {
         }
         return menuScreen;
     }
-    
+
     public ChessBoardScreen getChessBoardScreen() {
         if (chessBoardScreen == null) {
             chessBoardScreen = new ChessBoardScreen();
@@ -111,7 +146,23 @@ public class ScreenManager extends Game {
 
     @Override
     public void dispose() {
-
+        if(gm != null){
+            gm.exitGame();
+            gm = null;
+        }
+        // Dispose of all the screens
+        if (chessBoardScreen != null) {
+            chessBoardScreen.dispose();
+            chessBoardScreen = null;
+        }
+        if (menuScreen != null) {
+            menuScreen.dispose();
+            chessBoardScreen = null;
+        }
+        if (pauseScreen != null) {
+            pauseScreen.dispose();
+            chessBoardScreen = null;
+        }
     }
 
     // Add other methods to manage game state, screens, etc.

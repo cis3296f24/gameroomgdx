@@ -39,4 +39,8 @@ public class Bishop extends Piece {
     public String toString() {
         return isWhite() ? "B" : "b";
     }
+
+    public Piece copy() {
+        return new Bishop(this.isWhite);
+    }
 }
