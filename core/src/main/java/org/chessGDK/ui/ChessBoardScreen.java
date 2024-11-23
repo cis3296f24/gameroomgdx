@@ -46,7 +46,6 @@ public class ChessBoardScreen implements Screen {
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
         inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
-        Gdx.input.setInputProcessor(inputHandler);
         // Pieces load textures when created, placing them displays them
         for(int i = 0; i < board.length; i++) {
             for(int j = 0; j < board[i].length; j++) {
@@ -62,6 +61,10 @@ public class ChessBoardScreen implements Screen {
                 }
             }
         }
+    }
+
+    public Stage getStage() {
+        return stage;
     }
 
     @Override

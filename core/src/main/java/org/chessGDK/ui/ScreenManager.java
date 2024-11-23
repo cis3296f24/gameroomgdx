@@ -11,7 +11,8 @@ public class ScreenManager extends Game {
     private GameManager gm;
     private static final int FREE_MODE = -1;
     private static final int PUZZLE_MODE = -2;
-
+    private static final String NEW_GAME = "position startpos";
+    private static final String START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     // Create references to different screens
     private static ScreenManager instance;
@@ -21,7 +22,7 @@ public class ScreenManager extends Game {
 
     private boolean paused = false;
     private puzzleFENs puzzle = new puzzleFENs();
-    private String FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 
 
     // Variable for AI difficulty level
@@ -60,7 +61,7 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.
     public void playChess() {
         try {
-            gm = new GameManager(difficulty, FEN);
+            gm = new GameManager(difficulty, NEW_GAME);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -71,15 +72,13 @@ public class ScreenManager extends Game {
         }
         // Set the screen to Chess
         this.setScreen(chessBoardScreen);
-        menuScreen.dispose();
-        menuScreen = null;
     }
 
     public void playPuzzle(){
         try {
-            FEN = puzzle.getRandomPuzzle();
-            System.out.println(FEN);
-            gm = new GameManager(PUZZLE_MODE, FEN);
+            String fen = puzzle.getRandomPuzzle();
+            System.out.println(fen);
+            gm = new GameManager(PUZZLE_MODE, fen);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -95,7 +94,7 @@ public class ScreenManager extends Game {
 
     public void playFreeMode() {
         try {
-            gm = new GameManager(FREE_MODE, FEN);
+            gm = new GameManager(FREE_MODE, NEW_GAME);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -115,8 +114,8 @@ public class ScreenManager extends Game {
             String fen = "rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R";
             gm = new GameManager(difficulty, fen);
             chessBoardScreen = getChessBoardScreen();
+            pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
-            //chessBoardScreen.addButtons(gm);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -127,20 +126,20 @@ public class ScreenManager extends Game {
         menuScreen = null;
     }
 
-    public void exitChess() {
+    public void exitGame() {
         // Set the screen to Menu
-        gm.exitGame();
-        gm = null;
         if (chessBoardScreen != null) {
             chessBoardScreen.dispose();
             chessBoardScreen = null;
         }
-        this.setScreen(getMenuScreen());
-        pauseScreen.dispose();
-        pauseScreen = null;
-        if(paused){
+        else if (pauseScreen != null) {
+            pauseScreen.dispose();
+            pauseScreen = null;
+        }
+        else if(paused){
             paused = false;
         }
+        gm = null;
     }
 
     public MenuScreen getMenuScreen() {

@@ -1,5 +1,6 @@
 package org.chessGDK.ui;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -36,9 +37,6 @@ public class MenuScreen implements Screen {
         this.screenManager = ScreenManager.getInstance();
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
-        Gdx.input.setInputProcessor(stage);
-
-        createMenuButtons();
     }
 
     private void createMenuButtons() {
@@ -244,6 +242,7 @@ public class MenuScreen implements Screen {
 
     @Override
     public void show() {
+        createMenuButtons();
         Gdx.input.setInputProcessor(stage);
     }
 
