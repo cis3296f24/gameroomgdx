@@ -8,6 +8,7 @@ public abstract class Piece extends Actor {
     protected boolean isWhite;
     private Texture pieceTexture;
     private boolean animating;
+    private boolean moved;
     public Piece(boolean isWhite) {
         this.isWhite = isWhite;
         String texturePath = "Chess_" +
@@ -23,8 +24,12 @@ public abstract class Piece extends Actor {
 
     public abstract boolean isValidMove (int startX, int startY, int endX, int endY, Piece[][] board);
 
-    public boolean hasMoved() {
-        return false;
+    public boolean getMoved() {
+        return moved;
+    }
+
+    public void setMoved(boolean moved) {
+        this.moved = moved;
     }
 
     public Texture getTexture() {
@@ -50,7 +55,7 @@ public abstract class Piece extends Actor {
     }
 
     public abstract Piece copy();
-    public boolean enPassant() {
+    public boolean enPassant(String move) {
         return false;
     }
 

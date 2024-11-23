@@ -32,8 +32,10 @@ public class Pawn extends Piece{
         return false;
     }
 
-    public boolean enPassant() {
-        return enPassant;
+    public boolean enPassant(String move) {
+        int distance = Math.abs(Character.getNumericValue(move.charAt(1))
+                                - Character.getNumericValue(move.charAt(3)));
+        return distance == 2;
     }
 
     @Override
