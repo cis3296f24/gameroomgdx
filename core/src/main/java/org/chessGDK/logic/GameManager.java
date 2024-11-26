@@ -307,15 +307,15 @@ public class GameManager extends ScreenAdapter {
         return parsed;
     }
     private void checkforcheckmate(String fen) {
-                try {
-                    //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if(stockfishAI.checkmate(fen)){
-                        System.out.println("checkmate");
-                        gameOver = true;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        try {
+            //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
+            if(stockfishAI.checkmate(fen)){
+                System.out.println("checkmate");
+                gameOver = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

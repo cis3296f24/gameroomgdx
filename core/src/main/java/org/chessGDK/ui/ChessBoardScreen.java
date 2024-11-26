@@ -112,7 +112,7 @@ public class ChessBoardScreen implements Screen {
         camera.setToOrtho(false, width, height);
         TILE_SIZE = width/8;
         inputHandler.resize(TILE_SIZE);
-     }
+    }
 
     @Override
     public void pause() {

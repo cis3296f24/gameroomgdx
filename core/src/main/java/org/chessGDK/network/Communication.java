@@ -35,7 +35,7 @@ public class Communication {
                 if(object instanceof String){
                     String receivedFEN = (String) object;
                     System.out.println("FEN received: " + receivedFEN);
-                    gameManager.parseFen(receivedFEN);
+                    //gameManager.parseFen(receivedFEN);
                     gameManager.notifyMoveMade();
                 }
 
