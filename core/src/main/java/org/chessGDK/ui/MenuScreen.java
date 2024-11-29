@@ -30,6 +30,7 @@ public class MenuScreen implements Screen {
     private Stage stage;
     private Skin skin;
     private SelectBox<String> selectBox;
+    private SelectBox<String> HOCselectBox;
     private Label tooltipLabel;
     private String difficultyText;
 
@@ -171,8 +172,84 @@ public class MenuScreen implements Screen {
         table.row();
 
         // Multiplayer Button
-        TextButton multiplayerButton = createMenuButton("Multiplayer", "Play against another player", screenManager::playChess);
+        TextButton multiplayerButton = createMenuButton("Multiplayer", "Play against another player", screenManager::playMultiplayer);
         table.add(multiplayerButton).fillX().padBottom(15);
+        table.row();
+
+        // Host or Client (HOC)
+        HOCselectBox = new SelectBox<>(skin);
+        HOCselectBox.setItems("Host", "Client");
+
+        HOCselectBox.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                String HOC = HOCselectBox.getSelected();
+                switch (HOC) {
+                    case "Host":
+                        tooltipLabel.setText("Hosting a match");
+                        break;
+                    case "Client":
+                        tooltipLabel.setText("Joining a match");
+                        break;
+                }
+                tooltipLabel.setVisible(true);
+                positionTooltip(HOCselectBox);
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                tooltipLabel.setVisible(false);
+            }
+        });
+
+        HOCselectBox.getList().addListener(new InputListener() {
+            @Override
+            public boolean mouseMoved(InputEvent event, float x, float y) {
+                int index = HOCselectBox.getList().getSelectedIndex();
+                if (index != -1) {
+                    // Get the stage coordinates of the list
+                    Vector2 listPosition = HOCselectBox.getList().localToStageCoordinates(new Vector2(0, 0));
+
+                    // Calculate the Y-coordinate of the selected item
+                    float itemHeight = HOCselectBox.getList().getItemHeight();
+                    float selectedItemY = listPosition.y + HOCselectBox.getList().getHeight() - (index + 1) * itemHeight;
+
+                    // Set the tooltip position to the right of the selected item
+                    tooltipLabel.setPosition(listPosition.x + HOCselectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
+                    switch(index) {
+                        case 0:
+                            tooltipLabel.setText("Hosting a match");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 1:
+                            tooltipLabel.setText("Joining a match");
+                            tooltipLabel.setVisible(true);
+                            break;
+                    }
+                }
+                return super.mouseMoved(event, x, y);
+            }
+        });
+
+        HOCselectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String HOC = HOCselectBox.getSelected();
+                tooltipLabel.setVisible(false);
+
+                switch (HOC) {
+                    case "Host":
+                        screenManager.setHostOrClient("Host");
+                        System.out.println("Setting up server");
+                        break;
+                    case "Client":
+                        screenManager.setHostOrClient("Client");
+                        System.out.println("Setting up client");
+                        break;
+                }
+            }
+        });
+        table.add(HOCselectBox).padBottom(15);
         table.row();
 
         // Puzzle Button

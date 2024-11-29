@@ -11,6 +11,8 @@ public class ScreenManager extends Game {
     private GameManager gm;
     private static final int FREE_MODE = -1;
     private static final int PUZZLE_MODE = -2;
+    private static final int MULTIPLAYER_MODE = -3;
+
     public int MODE;
     private static final String NEW_GAME = "position startpos";
     private static final String START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -29,6 +31,12 @@ public class ScreenManager extends Game {
 
     // Variable for AI difficulty level
     private int difficulty = 0;
+
+    // For Network Setup
+    private String HostOrClient = "";
+
+    // Currently only supports localHost
+    private String serverIP = "127.0.0.1";
 
     // Private constructor to prevent external instantiation
     private ScreenManager() {}
@@ -58,6 +66,10 @@ public class ScreenManager extends Game {
 
     public void setDifficulty(int difficulty){
         this.difficulty = difficulty;
+    }
+
+    public void setHostOrClient(String HostOrClient){
+        this.HostOrClient = HostOrClient;
     }
 
     // Add other methods to manage game state, screens, etc.

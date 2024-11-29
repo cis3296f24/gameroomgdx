@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
 
+import org.chessGDK.network.Communication;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 import org.chessGDK.ui.ScreenManager;
@@ -40,15 +41,18 @@ public class GameManager extends ScreenAdapter {
     private boolean freeMode = false;
     private boolean puzzleMode = false;
     public volatile boolean gameOver = false;
+    private boolean multiplayerMode = false;
     private Stack<String> moveList;
     private Queue<String> solutionList;
     private String FEN;
     private float duration = .15f;
     private final HashMap<String, String> castleMoves;
     private String legalMoves;
+    private Communication communication;
+    private boolean isHost;
     private String[] bestMove;
 
-    public GameManager(int difficulty, String fen) throws IOException {
+    public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         castlingPieces = new Piece[6];
@@ -62,6 +66,15 @@ public class GameManager extends ScreenAdapter {
             difficulty = 20;
             setupSolutions(fen.split("\t")[1].replace(" ", ","));
         }
+        else if (difficulty == -3) {
+            multiplayerMode = true;
+        }
+
+        if(multiplayerMode){
+            isHost = HostOrClient.equals("Host");
+            communication = new Communication(this, isHost);
+        }
+
         stockfishAI = new StockfishAI(DEPTH, difficulty, FEN);
         FEN = getFenFromAI();
         castleMoves = new HashMap<>();
@@ -294,6 +307,11 @@ public class GameManager extends ScreenAdapter {
                 fullMoves++;
             halfMoves++;
             moveList.push(move);
+
+            if(multiplayerMode){
+                String updatedFen = generateFen();
+                communication.sendFEN(updatedFen);
+            }
             return true;
         }
         return false;
@@ -503,6 +521,9 @@ public class GameManager extends ScreenAdapter {
     }
 
     public void exitGame() {
+        if(communication != null){
+            communication.close();
+        }
         if (stockfishAI != null) {
             try {
                 stockfishAI.close();  // Close the Stockfish AI
