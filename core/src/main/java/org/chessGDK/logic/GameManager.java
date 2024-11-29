@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.Gdx;
 
+import org.chessGDK.network.Communication;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
+
 
 
 public class GameManager extends ScreenAdapter {
@@ -30,14 +32,17 @@ public class GameManager extends ScreenAdapter {
     private String enPassantSquare;
     private boolean freeMode = false;
     private boolean puzzleMode = false;
+    private boolean multiplayerMode = false;
     private boolean gameOver = false;
     private Stack<String> moveList;
     private String FEN;
     private float duration = .1f;
     private final HashMap<String, String> castleMoves;
     private String legalMoves;
+    private Communication communication;
+    private boolean isHost;
 
-    public GameManager(int difficulty, String fen) throws IOException {
+    public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         whiteTurn = true;
@@ -58,6 +63,15 @@ public class GameManager extends ScreenAdapter {
             puzzleMode = true;
             difficulty = 20;
         }
+        else if (difficulty == -3) {
+            multiplayerMode = true;
+        }
+
+        if(multiplayerMode){
+            isHost = HostOrClient.equals("Host");
+            communication = new Communication(this, isHost);
+        }
+
         stockfishAI = new StockfishAI(DEPTH, difficulty, FEN);
         legalMoves = getLegalMoves();
         printBoard();
@@ -77,39 +91,70 @@ public class GameManager extends ScreenAdapter {
     private void gameLoop() {
         // Start the game loop
         while (!gameOver) {
-            System.out.println(FEN);
+
             try {
+                FEN = generateFen();
                 legalMoves = getLegalMoves();        // Get all legal moves for after last move
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Legal Moves: " + legalMoves);
-            makeNextMove();
-            synchronized (turnLock) {
-                // Make the next move
-                try {
-                    turnLock.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    gameOver = true;
+
+                System.out.println("Current FEN:" + FEN);
+                System.out.println("Legal Moves: " + legalMoves);
+
+                makeNextMove();
+
+                synchronized (turnLock) {
+                    // Make the next move
+                    try {
+                        turnLock.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        gameOver = true;
+                    }
                 }
+
+                FEN = generateFen();
+
+                if(!freeMode)
+                    checkforcheckmate(FEN);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                gameOver = true;
             }
-            FEN = generateFen();
-            if(!freeMode)
-                checkforcheckmate(FEN);
+
         }
         exitGame();
     }
 
-    public void makeNextMove() {
-        if (whiteTurn)
-            playerTurn(); // White player move logic
-        else {
-            if(freeMode)
-                playerTurn();
-            else
-                aiTurn(); // Black (AI) move logic
+    private void waitForOpponentMove(){
+        synchronized (turnLock){
+            try{
+                turnLock.wait();;
+            } catch (InterruptedException e){
+                Thread.currentThread().interrupt();
+                gameOver = true;
+
+            }
         }
+    }
+
+    public void makeNextMove() {
+        if(multiplayerMode){
+            if((isHost && whiteTurn) || (!isHost && !whiteTurn)){
+                playerTurn();
+            } else {
+                waitForOpponentMove();
+            }
+        } else {
+            if (whiteTurn)
+                playerTurn(); // White player move logic
+            else {
+                if(freeMode || multiplayerMode)
+                    playerTurn();
+                else
+                    aiTurn(); // Black (AI) move logic
+            }
+        }
+
     }
 
     private boolean playerTurn() {
@@ -159,6 +204,7 @@ public class GameManager extends ScreenAdapter {
         if (move.isEmpty()) {
             return false;
         }
+
         char[] parsedMove = parseMove(move);
         int startCol = parsedMove[0];
         int startRow = parsedMove[1];
@@ -209,6 +255,12 @@ public class GameManager extends ScreenAdapter {
             whiteTurn = !whiteTurn;
             halfMoves++;
             moveList.push(move);
+
+            if(multiplayerMode){
+                String updatedFen = generateFen();
+                communication.sendFEN(updatedFen);
+            }
+
             notifyMoveMade();
             return true;
         }
@@ -255,15 +307,15 @@ public class GameManager extends ScreenAdapter {
         return parsed;
     }
     private void checkforcheckmate(String fen) {
-                try {
-                    //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if(stockfishAI.checkmate(fen)){
-                        System.out.println("checkmate");
-                        gameOver = true;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        try {
+            //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
+            if(stockfishAI.checkmate(fen)){
+                System.out.println("checkmate");
+                gameOver = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -495,6 +547,11 @@ public class GameManager extends ScreenAdapter {
     }
 
     public void exitGame() {
+        if(communication != null){
+            communication.close();
+        }
+
+
         if (stockfishAI != null) {
             try {
                 stockfishAI.close();  // Close the Stockfish AI

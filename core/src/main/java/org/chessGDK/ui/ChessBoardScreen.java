@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 
+
 /** First screen of the application. Displayed after the application is created. */
 public class ChessBoardScreen implements Screen {
     private final SpriteBatch batch;
@@ -111,7 +112,7 @@ public class ChessBoardScreen implements Screen {
         camera.setToOrtho(false, width, height);
         TILE_SIZE = width/8;
         inputHandler.resize(TILE_SIZE);
-     }
+    }
 
     @Override
     public void pause() {
