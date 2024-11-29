@@ -71,7 +71,7 @@ public class PieceInputHandler extends InputAdapter {
             if(isDragging || !firstClick)
                 cancelLift();
             System.out.println("Switching to the menu screen");
-            ScreenManager.getInstance().togglePause();
+            ScreenManager.getInstance().pauseGame();
             return true;
         }
         return false;
@@ -155,12 +155,12 @@ public class PieceInputHandler extends InputAdapter {
                 (char) liftChars.y +
                 (char) placeX +
                 (char) placeY;
-        if (gm.movePiece(move)) {
+        if (gm.isLegalMove(move)) {
             System.out.println("Placed piece at: " + (char) placeX + ", " + (char) placeY);
             isDragging = false;
             clearPossible();
             selectedPiece.remove();
-            gm.notifyMoveMade();
+            gm.queueMove(move);
         } else {
             liftChars.x -= 'a';
             liftChars.y -= '1';

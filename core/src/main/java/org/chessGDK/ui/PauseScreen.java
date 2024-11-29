@@ -4,6 +4,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -34,21 +35,22 @@ public class PauseScreen implements Screen{
         // Load the skin
         skin = new Skin(Gdx.files.internal("uiskin.json"));
         tooltipLabel = new Label("", skin);
-        stage.addActor(tooltipLabel);
+        sm = ScreenManager.getInstance();
+        addListeners();
         // Add the input listeners and buttons
     }
 
     private void addListeners() {
         // Add the play button
-        TextButton playButton = createMenuButton("Resume Game", "Resumes the game",
-                                            "Switching to game screen", sm::togglePause);
+        TextButton playButton = createMenuButton("Resume", "Resumes the game",
+                                            "Switching to game screen", sm::resumeGame);
         playButton.setPosition(Gdx.graphics.getWidth() / 2f - playButton.getWidth() / 2f,
                                Gdx.graphics.getHeight() / 2f - playButton.getHeight() / 2f + 60);
         stage.addActor(playButton);
 
         // Add the exit to menu button
         TextButton exitToMenu = createMenuButton("Return to Menu", "Exits to main menu",
-                                                "Exiting to menu", sm::displayMenu);
+                                                "Exiting to menu", sm::exitGame);
         exitToMenu.setPosition(Gdx.graphics.getWidth() / 2f - exitToMenu.getWidth() / 2f,
                                Gdx.graphics.getHeight() / 2f - exitToMenu.getHeight() / 2f);
         stage.addActor(exitToMenu);
@@ -66,12 +68,13 @@ public class PauseScreen implements Screen{
                 // Handle the keydown event here
                 if (keycode == Input.Keys.ESCAPE) {
                     System.out.println("Switching to the chess screen");
-                    sm.togglePause(); // Switch to the chess screen
+                    sm.resumeGame(); // Switch to the chess screen
                     return true; // Return true if the event was handled
                 }
                 return false; // Return false if the event was not handled
             }
         });
+        stage.addActor(tooltipLabel);
     }
 
     private TextButton createMenuButton(String text, String tooltipText,
@@ -101,7 +104,6 @@ public class PauseScreen implements Screen{
                 action.run();
                 tooltipLabel.setVisible(false);
             }
-
         });
 
         return button;
@@ -125,8 +127,6 @@ public class PauseScreen implements Screen{
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
-        sm = ScreenManager.getInstance();
-        addListeners();
     }
 
     @Override
@@ -146,7 +146,7 @@ public class PauseScreen implements Screen{
 
     @Override
     public void resume() {
-        sm.togglePause();
+
     }
 
     @Override

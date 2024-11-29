@@ -67,6 +67,7 @@ public class StockfishAI {
     // Send a command to Stockfish will add newline before sending
     private boolean sendCommand(String command) {
         returnList.clear();
+        //System.out.println("Command sent: " + command);
         if (!stockfishProcess.isAlive()) {
             System.out.println("Stockfish process is dead");
             return false;
@@ -85,6 +86,8 @@ public class StockfishAI {
         String line = null;
         try {
             line = input.readLine();
+            if (line == null)
+                return null;
             returnList.add(line);
         } catch (IOException e) {
             System.out.println("Error reading from Stockfish: " + e.getMessage());
@@ -97,7 +100,7 @@ public class StockfishAI {
         sendCommand(command);
     }
 
-    public void setPosition(String fen) {
+    private void setPosition(String fen) {
         if (fen.contains("startpos"))
             sendCommand(fen);
         else
@@ -124,7 +127,7 @@ public class StockfishAI {
         String[] moves = {"", ""};
         String line;
         while ((line = getLine()) != null) {
-          //  System.out.println("Stockfish:" + line);
+            //System.out.println("Stockfish: " + line);
             if (line.startsWith("bestmove")) {
                 moves[0] = line.split(" ")[1];  // Extract the move from the response
                 if (line.split(" ").length > 2)
@@ -136,7 +139,7 @@ public class StockfishAI {
     }
 
     public boolean checkmate(String fen) throws IOException {
-        setPosition(fen);
+        //setPosition(fen);
         // Request the best move
         String toSend = "go movetime 10";
         sendCommand(toSend);
@@ -154,6 +157,7 @@ public class StockfishAI {
         while ((line = getLine()) != null) {
             if(line.startsWith("Fen: ")) {
                 FEN = line.substring(5);
+                System.out.println(FEN);
                 break;
             }
         }
@@ -185,9 +189,13 @@ public class StockfishAI {
         String line;
         StringBuilder legalMoves = new StringBuilder();
         // Read Stockfish's response
-        while ((line = input.readLine()) != null) {
+        while ((line = getLine()) != null) {
             //System.out.println("Stockfish: " + line);
-
+            // Break on a stopping point to avoid infinite loops
+            if (line.startsWith("Nodes searched")) {
+                legalMoves.deleteCharAt(legalMoves.length() - 1);
+                break;
+            }
             // Look for the "Legal moves:" line
             if (line.endsWith(": 1")) {
                 line = line.substring(0,4);
@@ -195,10 +203,7 @@ public class StockfishAI {
                 //System.out.println(legalMoves);
             }
 
-            // Break on a stopping point to avoid infinite loops
-            if (line.startsWith("Nodes searched")) {
-                break;
-            }
+
         }
         sendCommand("stop");
         return legalMoves.toString();

@@ -11,6 +11,7 @@ public class ScreenManager extends Game {
     private GameManager gm;
     private static final int FREE_MODE = -1;
     private static final int PUZZLE_MODE = -2;
+    public int MODE;
     private static final String NEW_GAME = "position startpos";
     private static final String START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -19,6 +20,7 @@ public class ScreenManager extends Game {
     private ChessBoardScreen chessBoardScreen;
     private MenuScreen menuScreen;
     private PauseScreen pauseScreen;
+    private GameOverScreen gameOverScreen;
 
     private boolean paused = false;
     private puzzleFENs puzzle = new puzzleFENs();
@@ -61,8 +63,10 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.
     public void playChess() {
         try {
+            MODE = 0;
             gm = new GameManager(difficulty, NEW_GAME);
             chessBoardScreen = getChessBoardScreen();
+            gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
             gm.startGameLoopThread();
@@ -72,14 +76,18 @@ public class ScreenManager extends Game {
         }
         // Set the screen to Chess
         this.setScreen(chessBoardScreen);
+        menuScreen.dispose();
+        menuScreen = null;
     }
 
     public void playPuzzle(){
         try {
+            MODE = PUZZLE_MODE;
             String fen = puzzle.getRandomPuzzle();
             System.out.println(fen);
             gm = new GameManager(PUZZLE_MODE, fen);
             chessBoardScreen = getChessBoardScreen();
+            gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
             gm.startGameLoopThread();
@@ -94,6 +102,7 @@ public class ScreenManager extends Game {
 
     public void playFreeMode() {
         try {
+            MODE = 0;
             gm = new GameManager(FREE_MODE, NEW_GAME);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
@@ -111,11 +120,13 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.
     public void loadSaveState() {
         try {
-            String fen = "rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R";
+            String fen = "r1bqkbnr/ppp2ppp/2n5/3pp3/6P1/3P1P2/PPP1P2P/RNBQKBNR w KQkq - 1 4";
             gm = new GameManager(difficulty, fen);
             chessBoardScreen = getChessBoardScreen();
+            gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
+            gm.startGameLoopThread();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -128,15 +139,20 @@ public class ScreenManager extends Game {
 
     public void exitGame() {
         // Set the screen to Menu
+        displayMenu();
         if (chessBoardScreen != null) {
             chessBoardScreen.dispose();
             chessBoardScreen = null;
         }
-        else if (pauseScreen != null) {
+        if (pauseScreen != null) {
             pauseScreen.dispose();
             pauseScreen = null;
         }
-        else if(paused){
+        if (gameOverScreen != null) {
+            gameOverScreen.dispose();
+            gameOverScreen = null;
+        }
+        if(paused){
             paused = false;
         }
         gm = null;
@@ -163,23 +179,42 @@ public class ScreenManager extends Game {
         return pauseScreen;
     }
 
+    public GameOverScreen getGameOverScreen() {
+        if (gameOverScreen == null) {
+            gameOverScreen = new GameOverScreen();
+        }
+        return gameOverScreen;
+    }
+
     public void togglePause() {
         // Set the screen to Menu
         if (!paused) {
             paused = true;
             System.out.println("Game Paused");
-            this.setScreen(getPauseScreen());
+            this.setScreen(pauseScreen);
         }
         else {
             paused = false;
             System.out.println("Game Resumed");
-            this.setScreen(getChessBoardScreen());
+            this.setScreen(chessBoardScreen);
         }
     }
 
+    public void pauseGame() {
+        System.out.println("Game Paused");
+        this.setScreen(pauseScreen);
+        paused = true;
+    }
+    public void resumeGame() {
+        System.out.println("Game Resumed");
+        this.setScreen(chessBoardScreen);
+        paused = false;
+    }
     @Override
     public void render() {
         // This will call the render method of the current screen
+        if (gm != null && gm.isGameOver() && !paused)
+            this.setScreen(getGameOverScreen());
         super.render();
     }
 

@@ -12,11 +12,18 @@ import org.chessGDK.ai.StockfishAI;
 import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.HashMap;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class GameManager extends ScreenAdapter {
     private final Object turnLock = new Object();
+    private final BlockingQueue<String> moveQueue = new LinkedBlockingQueue<>();
     private Thread gameLoopThread;
 
     private boolean whiteTurn;
@@ -32,7 +39,7 @@ public class GameManager extends ScreenAdapter {
     private String enPassantSquare;
     private boolean freeMode = false;
     private boolean puzzleMode = false;
-    private volatile boolean gameOver = false;
+    public volatile boolean gameOver = false;
     private Stack<String> moveList;
     private Queue<String> solutionList;
     private String FEN;
@@ -40,7 +47,6 @@ public class GameManager extends ScreenAdapter {
     private final HashMap<String, String> castleMoves;
     private String legalMoves;
     private String[] bestMove;
-    private final static ScreenManager sm = ScreenManager.getInstance();
 
     public GameManager(int difficulty, String fen) throws IOException {
         board = new Piece[8][8];
@@ -83,46 +89,32 @@ public class GameManager extends ScreenAdapter {
         gameLoopThread.start();
     }
 
-    public void notifyMoveMade() {
-        synchronized (turnLock) {
-            turnLock.notifyAll(); // Notify the game loop that a move has been made
-        }
-    }
-
-    public void endGame() {
-        synchronized (turnLock) {
-            gameOver = true;
-            turnLock.notifyAll(); // Wake up any waiting threads
-        }
-    }
-
-    private void gameLoop() {
-
+    private void gameLoop () {
+        if(puzzleMode)
+            aiTurn();
         while (!gameOver) {
-            System.out.println(FEN);
-
-            synchronized (turnLock) {
-                // Check if the game is over before making the next move
-                if (gameOver) break;
-
-                makeNextMove(); // Make the current player's move
-
-                // Notify the other thread to proceed
-                whiteTurn = !whiteTurn; // Toggle turn
-
-                turnLock.notifyAll();
-                // Wait for the other player's move or end of the game
-                try {
-                    while (!gameOver && whiteTurn) {
-                        turnLock.wait();
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    gameOver = true; // Handle interruption by stopping the game
-                }
+            try {
+                // If it's the player's turn, wait for a move from the queue
+                System.out.println("Waiting for move...");
+                String move = moveQueue.take(); // Blocks until a move is added
+                movePiece(move);
+                updateBoardState();
+                toggleTurn();
+                checkforcheckmate(move);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("Game loop interrupted!");
+                break;
             }
-            updateBoardState();
         }
+        System.out.printf("Game over: %s - %s\n",gameOver, Thread.currentThread().getName());
+    }
+
+    private boolean isAITurn() {
+        if (puzzleMode) {
+            return whiteTurn == startColor;
+        }
+        return !whiteTurn; // Assuming AI is always black and whiteTurn tracks player turns
     }
 
     private void updateBoardState() {
@@ -139,16 +131,18 @@ public class GameManager extends ScreenAdapter {
         }
         if (puzzleMode) {
             System.out.println("Puzzle Move: " + solutionList.peek());
-            if (solutionList.peek() == null)
+            if (solutionList.peek() == null) {
+                System.out.println("Puzzle Completed!");
                 gameOver = true;
+            }
         }
         else {
             System.out.println("Best Move: " + bestMove[0]);
-            checkforcheckmate(FEN);
         }
     }
 
-    public void makeNextMove() {
+    public void toggleTurn() {
+        whiteTurn = !whiteTurn;
         if (puzzleMode)
             puzzleTurns();
         else if (freeMode)
@@ -180,25 +174,18 @@ public class GameManager extends ScreenAdapter {
     }
 
     private void playerTurn() {
-        synchronized (turnLock) {
-            if (gameOver) return;
-
-            System.out.println("Player makes a move.");
-            whiteTurn = false; // Player completes their turn
-            turnLock.notifyAll(); // Notify the game loop
-        }
+        System.out.println("Player's turn");
     }
 
     public void aiTurn() {
-        System.out.println("ai scheduled turn");
+        System.out.println("AI's turn");
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
-                System.out.println("ai turn ran");
                 if (puzzleMode && !solutionList.isEmpty())
-                    movePiece(solutionList.peek());
+                    queueMove(solutionList.peek());
                 else if (!puzzleMode)
-                    movePiece(bestMove[0]);
+                    queueMove(bestMove[0]);
             }
         }, .1f); // Delay by .5 second
     }
@@ -212,8 +199,6 @@ public class GameManager extends ScreenAdapter {
     }
 
     public String getLegalMoves() throws IOException {
-        if (puzzleMode && !solutionList.isEmpty())
-            return solutionList.peek();
         return stockfishAI.getLegalMoves();
     }
 
@@ -226,7 +211,6 @@ public class GameManager extends ScreenAdapter {
             //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
             if(stockfishAI.checkmate(fen)){
                 System.out.println("checkmate");
-                gameLoopThread.interrupt();
                 gameOver = true;
             }
         } catch (IOException e) {
@@ -235,12 +219,22 @@ public class GameManager extends ScreenAdapter {
         return gameOver;
     }
 
-    private boolean checkLegalMoves(String move) {
-        if(!stockfishAI.parseLegalMoves(move, legalMoves)){
+    public boolean isLegalMove(String move) {
+        if(!puzzleMode && !stockfishAI.parseLegalMoves(move, legalMoves)){
             System.out.println("Illegal move");
             return false;
         }
+        else if (puzzleMode && !solutionList.isEmpty()) {
+            if (!solutionList.peek().equals(move)) {
+                System.out.println("Incorrect puzzle move");
+                return false;
+            }
+        }
         return true;
+    }
+
+    public boolean queueMove(String move) {
+        return moveQueue.add(move);
     }
 
     public boolean movePiece(String move) {
@@ -258,11 +252,7 @@ public class GameManager extends ScreenAdapter {
         int endRow = parsedMove[3];
         char newRank;
         Piece piece = board[startRow][startCol];
-        if (!freeMode || !puzzleMode) {
-            if (!checkLegalMoves(move)) {
-                return false;
-            }
-        }
+
         Piece contested = board[endRow][endCol];
         enPassantSquare = null;
         // Ensure the right piece color is moving according to the turn
@@ -279,7 +269,10 @@ public class GameManager extends ScreenAdapter {
             board[startRow][startCol] = null;
             if (parsedMove.length == 5) {
                 newRank = parsedMove[4];
-                promote(newRank, endRow, endCol);
+                // Changes piece on next render call
+                Gdx.app.postRunnable(() -> {
+                    promote(newRank, endRow, endCol);
+                });
             }
             if (piece instanceof Pawn && piece.enPassant(move)) {
                 int direction = startRow > endRow ? 1 : -1;
@@ -367,86 +360,8 @@ public class GameManager extends ScreenAdapter {
     }
 
     public void sendPosToStockfish(String fen) {
+        System.out.println(fen);
         stockfishAI.sendPosition(fen);
-    }
-
-    public String generateFen() {
-        StringBuilder fen = new StringBuilder();
-        // 1. Piece Placement
-        for (int row = 7; row >= 0; row--) {
-            int emptyCount = 0;
-
-            for (int col = 0; col < 8; col++) {
-                Piece piece = board[row][col];
-                if (piece == null) {
-                    emptyCount++;
-                } else {
-                    if (emptyCount > 0) {
-                        fen.append(emptyCount);
-                        emptyCount = 0;
-                    }
-                    fen.append(piece);
-                }
-            }
-            if (emptyCount > 0) {
-                fen.append(emptyCount);
-            }
-            if (row > 0) {
-                fen.append("/");
-            }
-        }
-        // 2. Active Color (w or b)
-        fen.append(whiteTurn ? " w " : " b ");
-        // 3. Castling Availability (KQkq or -)
-        if (!castlingRights.isEmpty()) {
-            if (castlingPieces[0] != null && castlingPieces[0].getMoved()) {
-                castlingRights = castlingRights.replace("K", "");
-                castlingRights = castlingRights.replace("Q", "");
-            }
-            if (castlingPieces[3] != null && castlingPieces[3].getMoved()) {
-                castlingRights = castlingRights.replace("k", "");
-                castlingRights = castlingRights.replace("q", "");
-            }
-            if (castlingPieces[1] != null && castlingPieces[1].getMoved()) {
-                castlingRights = castlingRights.replace("Q", "");
-            }
-            if (castlingPieces[2] != null && castlingPieces[2].getMoved()) {
-                castlingRights = castlingRights.replace("K", "");
-            }
-            if (castlingPieces[4] != null && castlingPieces[4].getMoved()) {
-                castlingRights = castlingRights.replace("q", "");
-            }
-            if (castlingPieces[5] != null && castlingPieces[5].getMoved()) {
-                castlingRights = castlingRights.replace("k", "");
-            }
-        }
-
-        fen.append(castlingRights.isEmpty() ? "-" : castlingRights);
-        fen.append(" ");
-        // 4. En Passant Target Square (e.g., e3 or -)
-        fen.append(enPassantSquare != null ? enPassantSquare : "-");
-        fen.append(" ");
-        // 5. Halfmove Clock
-        fen.append(halfMoves).append(" ");
-        // 6. Fullmove Number
-        fen.append(fullMoves);
-
-        return fen.toString();
-    }
-
-    private String appendMoveList(String fen) {
-        StringBuilder fenWithMoves = new StringBuilder();
-        fenWithMoves.append(fen);
-        // 7. Add movelist if there is one
-        if (!moveList.isEmpty()) {
-            String moves = moveList.toString();
-            moves = moves.replace('[', ' ').replace(']', ' ');
-            moves = moves.trim();
-            fenWithMoves.append(" moves ");
-            for (String move : moves.split(","))
-                fenWithMoves.append(move);
-        }
-        return fenWithMoves.toString();
     }
 
     private String appendLastMove(String fen) {
@@ -549,12 +464,12 @@ public class GameManager extends ScreenAdapter {
         return rights;
     }
 
-    public StockfishAI getAI() {
-        return stockfishAI;
-    }
-
     public boolean isWhiteTurn() {
         return whiteTurn;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
     }
 
     public Piece[][] getBoard() {
@@ -595,10 +510,9 @@ public class GameManager extends ScreenAdapter {
                 e.printStackTrace();
             }
         }
+        gameLoopThread.interrupt();
         Gdx.input.setInputProcessor(null);
         // Perform any other cleanup needed for the game
         System.out.println("GameManager closed.");
-        sm.togglePause();
-        sm.displayMenu();
     }
 }
