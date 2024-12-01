@@ -102,7 +102,7 @@ public class PieceInputHandler extends InputAdapter {
             System.out.println("No piece at: " + (char) (liftX + 'a') + ", " + (char) (liftY + '1'));
             return;
         }
-        else if (board[liftY][liftX].isWhite() != gm.isWhiteTurn()) {
+        else if (board[liftY][liftX].isWhite() != gm.isStartColor()) {
             System.out.println("Not your turn");
             return;
         }

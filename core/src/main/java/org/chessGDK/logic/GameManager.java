@@ -10,7 +10,6 @@ import com.badlogic.gdx.Gdx;
 import org.chessGDK.network.Communication;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
-import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
 import java.util.Queue;
@@ -23,7 +22,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class GameManager extends ScreenAdapter {
-    private final Object turnLock = new Object();
     private final BlockingQueue<String> moveQueue = new LinkedBlockingQueue<>();
     private Thread gameLoopThread;
 
@@ -31,21 +29,16 @@ public class GameManager extends ScreenAdapter {
     private boolean startColor;
     private final Piece[][] board;
     private final Blank[][] possibilities;
-    private final Piece[] castlingPieces;
     private final StockfishAI stockfishAI;
     private final int DEPTH = 12;
-    private int halfMoves;
-    private int fullMoves;
-    private String castlingRights;
-    private String enPassantSquare;
     private boolean freeMode = false;
     private boolean puzzleMode = false;
     public volatile boolean gameOver = false;
     private boolean multiplayerMode = false;
-    private Stack<String> moveList;
+    private final Stack<String> moveList;
     private Queue<String> solutionList;
     private String FEN;
-    private float duration = .15f;
+    private final float duration = .15f;
     private final HashMap<String, String> castleMoves;
     private String legalMoves;
     private Communication communication;
@@ -55,7 +48,6 @@ public class GameManager extends ScreenAdapter {
     public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
-        castlingPieces = new Piece[6];
         legalMoves = "";
         FEN = fen.split("\t")[0];
         if (difficulty == -1) {
@@ -68,13 +60,9 @@ public class GameManager extends ScreenAdapter {
         }
         else if (difficulty == -3) {
             multiplayerMode = true;
-        }
-
-        if(multiplayerMode){
             isHost = HostOrClient.equals("Host");
             communication = new Communication(this, isHost);
         }
-
         stockfishAI = new StockfishAI(DEPTH, difficulty, FEN);
         FEN = getFenFromAI();
         castleMoves = new HashMap<>();
@@ -83,10 +71,10 @@ public class GameManager extends ScreenAdapter {
         castleMoves.put("e8c8", "a8d8");
         castleMoves.put("e8g8", "h8f8");
         moveList = new Stack<>();
-        castlingRights = "KQkq";
         parseFen(FEN);
         printBoard();
         updateBoardState();
+        System.out.println("Start Color: " + (startColor ? "White" : "Black"));
     }
 
     private void setupSolutions(String solutions) {
@@ -110,6 +98,9 @@ public class GameManager extends ScreenAdapter {
                 // If it's the player's turn, wait for a move from the queue
                 System.out.println("Waiting for move...");
                 String move = moveQueue.take(); // Blocks until a move is added
+                if(multiplayerMode && (whiteTurn == startColor)){
+                    communication.sendMove(move);
+                }
                 movePiece(move);
                 updateBoardState();
                 toggleTurn();
@@ -134,6 +125,7 @@ public class GameManager extends ScreenAdapter {
         String toStock = appendLastMove(FEN);
         sendPosToStockfish(toStock);
         FEN = getFenFromAI();
+
         try {
             bestMove = getBestMove();
             legalMoves = getLegalMoves();        // Get all legal moves for after last move
@@ -160,6 +152,8 @@ public class GameManager extends ScreenAdapter {
             puzzleTurns();
         else if (freeMode)
             freeTurns();
+        else if (multiplayerMode)
+            multiplayerTurns();
         else
             normalTurns();
     }
@@ -180,10 +174,20 @@ public class GameManager extends ScreenAdapter {
             gameOver = true;
             return;
         }
-        if (whiteTurn == startColor)
+        if (whiteTurn != startColor)
             aiTurn();
         else
             playerTurn();
+    }
+
+    private void multiplayerTurns() {
+        if(multiplayerMode){
+            if((isHost && whiteTurn) || (!isHost && !whiteTurn)){
+                playerTurn();
+            }
+            else
+                System.out.println("Opponent's turn");
+        }
     }
 
     private void playerTurn() {
@@ -267,7 +271,6 @@ public class GameManager extends ScreenAdapter {
         Piece piece = board[startRow][startCol];
 
         Piece contested = board[endRow][endCol];
-        enPassantSquare = null;
         // Ensure the right piece color is moving according to the turn
         if (piece != null) {
             if (contested != null) {
@@ -287,12 +290,6 @@ public class GameManager extends ScreenAdapter {
                     promote(newRank, endRow, endCol);
                 });
             }
-            if (piece instanceof Pawn && piece.enPassant(move)) {
-                int direction = startRow > endRow ? 1 : -1;
-                char temp = move.charAt(3);
-                temp += (char)direction;
-                enPassantSquare = (char)('a' + endCol) + "" + temp ;
-            }
             if (piece instanceof Rook) {
                 piece.setMoved(true);
             }
@@ -303,15 +300,7 @@ public class GameManager extends ScreenAdapter {
 
             printBoard();
             System.out.println("Moved: " + move);
-            if(!whiteTurn)
-                fullMoves++;
-            halfMoves++;
             moveList.push(move);
-
-            if(multiplayerMode){
-                String updatedFen = generateFen();
-                communication.sendFEN(updatedFen);
-            }
             return true;
         }
         return false;
@@ -445,45 +434,18 @@ public class GameManager extends ScreenAdapter {
         }
         String[] parts = fen.split(" ");
         whiteTurn = parts[1].equals("w");
-        startColor = whiteTurn;
-        if (!parts[2].equals("-"))
-            castlingRights = castlingPiecesFromString(parts[2]);
-        enPassantSquare = parts[3];
-        halfMoves = Integer.parseInt(parts[4]);
-        fullMoves = Integer.parseInt(parts[5]);
-    }
-
-    private String castlingPiecesFromString(String rights) {
-        // Process FEN castling rights string
-        if (rights.contains("Q")) { // White queen-side
-            castlingPieces[0] = board[0][4]; // White king
-            castlingPieces[0].setMoved(false); // White king
-            castlingPieces[1] = board[0][0]; // White queen-side rook
-            castlingPieces[1].setMoved(false); // White queen-side rook
-        }
-        if (rights.contains("K")) { // White king-side
-            castlingPieces[0] = board[0][4]; // White king
-            castlingPieces[0].setMoved(false); // White king
-            castlingPieces[2] = board[0][7]; // White king-side rook
-            castlingPieces[2].setMoved(false); // White king-side rook
-        }
-        if (rights.contains("q")) { // Black queen-side
-            castlingPieces[3] = board[7][4]; // Black king
-            castlingPieces[3].setMoved(false); // Black king
-            castlingPieces[4] = board[7][0]; // Black queen-side rook
-            castlingPieces[4].setMoved(false); // Black queen-side rook
-        }
-        if (rights.contains("k")) { // Black king-side
-            castlingPieces[3] = board[7][4]; // Black king
-            castlingPieces[3].setMoved(false); // Black king
-            castlingPieces[5] = board[7][7]; // Black king-side rook
-            castlingPieces[5].setMoved(false); // Black king-side rook
-        }
-        return rights;
+        if ((multiplayerMode && !isHost) || puzzleMode)
+            startColor = !whiteTurn;
+        else
+            startColor = whiteTurn;
     }
 
     public boolean isWhiteTurn() {
         return whiteTurn;
+    }
+
+    public boolean isStartColor() {
+        return startColor;
     }
 
     public boolean isGameOver() {

@@ -76,7 +76,7 @@ public class ScreenManager extends Game {
     public void playChess() {
         try {
             MODE = 0;
-            gm = new GameManager(difficulty, NEW_GAME);
+            gm = new GameManager(difficulty, NEW_GAME, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
@@ -97,7 +97,7 @@ public class ScreenManager extends Game {
             MODE = PUZZLE_MODE;
             String fen = puzzle.getRandomPuzzle();
             System.out.println(fen);
-            gm = new GameManager(PUZZLE_MODE, fen);
+            gm = new GameManager(PUZZLE_MODE, fen, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
@@ -115,7 +115,23 @@ public class ScreenManager extends Game {
     public void playFreeMode() {
         try {
             MODE = 0;
-            gm = new GameManager(FREE_MODE, NEW_GAME);
+            gm = new GameManager(FREE_MODE, NEW_GAME, HostOrClient);
+            chessBoardScreen = getChessBoardScreen();
+            pauseScreen = getPauseScreen();
+            chessBoardScreen.loadTextures(gm);
+            gm.startGameLoopThread();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // Set the screen to Chess
+        this.setScreen(chessBoardScreen);
+        menuScreen.dispose();
+        menuScreen = null;
+    }
+
+    public void playMultiplayer(){
+        try {
+            gm = new GameManager(MULTIPLAYER_MODE, NEW_GAME, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -133,7 +149,7 @@ public class ScreenManager extends Game {
     public void loadSaveState() {
         try {
             String fen = "r1bqkbnr/ppp2ppp/2n5/3pp3/6P1/3P1P2/PPP1P2P/RNBQKBNR w KQkq - 1 4";
-            gm = new GameManager(difficulty, fen);
+            gm = new GameManager(difficulty, fen, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
