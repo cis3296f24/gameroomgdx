@@ -159,7 +159,6 @@ public class StockfishAI {
         while ((line = inputReader.readLine()) != null) {
             //System.out.println("Stockfish: " + line);
 
-            // Look for the "Legal moves:" line
             if (line.endsWith(": 1")) {
                 line = line.substring(0,4);
                 legalMoves.append(line).append(","); // Extract moves

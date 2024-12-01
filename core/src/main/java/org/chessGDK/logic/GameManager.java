@@ -11,11 +11,13 @@ import com.badlogic.gdx.Gdx;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 import org.chessGDK.ui.ChessBoardScreen;
+import org.chessGDK.ui.GameOverScreen;
 import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Stack;
+import java.util.TimerTask;
 
 
 public class GameManager extends ScreenAdapter {
@@ -34,6 +36,7 @@ public class GameManager extends ScreenAdapter {
     private Stack<String> moveList;
     private ChessBoardScreen screen;
     private String FEN;
+    private GameOverScreen gameOverScreen;
 
     public GameManager(int difficulty, String fen) throws IOException {
         board = new Piece[8][8];
@@ -55,6 +58,7 @@ public class GameManager extends ScreenAdapter {
         castlingRights = "KQkq";
         enPassantSquare = null;
         screen = ScreenManager.getInstance().getChessBoardScreen();
+        gameOverScreen = new GameOverScreen();
     }
 
 
@@ -271,9 +275,16 @@ public class GameManager extends ScreenAdapter {
     private void checkforcheckmate(String fen) {
                 try {
                     //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if(stockfishAI.checkmate(fen)){
-                        System.out.println("checkmate");
+                    if (stockfishAI.checkmate(fen)) {
+                        System.out.println("Checkmate!");
                         gameOver = true;
+
+                        Timer.schedule(new Timer.Task() {
+                            @Override
+                            public void run() {
+                                ScreenManager.getInstance().setScreen(gameOverScreen);
+                            }
+                        }, 2f); // 2 seconds delay
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
