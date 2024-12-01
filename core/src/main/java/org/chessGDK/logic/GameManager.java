@@ -181,13 +181,11 @@ public class GameManager extends ScreenAdapter {
     }
 
     private void multiplayerTurns() {
-        if(multiplayerMode){
-            if((isHost && whiteTurn) || (!isHost && !whiteTurn)){
-                playerTurn();
-            }
-            else
-                System.out.println("Opponent's turn");
+        if((isHost && whiteTurn) || (!isHost && !whiteTurn)){
+            playerTurn();
         }
+        else
+            System.out.println("Opponent's turn");
     }
 
     private void playerTurn() {

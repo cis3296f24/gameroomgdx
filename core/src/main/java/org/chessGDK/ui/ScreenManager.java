@@ -22,7 +22,6 @@ public class ScreenManager extends Game {
     private ChessBoardScreen chessBoardScreen;
     private MenuScreen menuScreen;
     private PauseScreen pauseScreen;
-    private GameOverScreen gameOverScreen;
 
     private boolean paused = false;
     private puzzleFENs puzzle = new puzzleFENs();
@@ -78,7 +77,6 @@ public class ScreenManager extends Game {
             MODE = 0;
             gm = new GameManager(difficulty, NEW_GAME, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
-            gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
             gm.startGameLoopThread();
@@ -99,7 +97,6 @@ public class ScreenManager extends Game {
             System.out.println(fen);
             gm = new GameManager(PUZZLE_MODE, fen, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
-            gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
             gm.startGameLoopThread();
@@ -151,7 +148,6 @@ public class ScreenManager extends Game {
             String fen = "r1bqkbnr/ppp2ppp/2n5/3pp3/6P1/3P1P2/PPP1P2P/RNBQKBNR w KQkq - 1 4";
             gm = new GameManager(difficulty, fen, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
-            gameOverScreen = getGameOverScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
             gm.startGameLoopThread();
@@ -175,10 +171,6 @@ public class ScreenManager extends Game {
         if (pauseScreen != null) {
             pauseScreen.dispose();
             pauseScreen = null;
-        }
-        if (gameOverScreen != null) {
-            gameOverScreen.dispose();
-            gameOverScreen = null;
         }
         if(paused){
             paused = false;
@@ -205,13 +197,6 @@ public class ScreenManager extends Game {
             pauseScreen = new PauseScreen();
         }
         return pauseScreen;
-    }
-
-    public GameOverScreen getGameOverScreen() {
-        if (gameOverScreen == null) {
-            gameOverScreen = new GameOverScreen();
-        }
-        return gameOverScreen;
     }
 
     public void togglePause() {
@@ -241,8 +226,6 @@ public class ScreenManager extends Game {
     @Override
     public void render() {
         // This will call the render method of the current screen
-        if (gm != null && gm.isGameOver() && !paused)
-            this.setScreen(getGameOverScreen());
         super.render();
     }
 
