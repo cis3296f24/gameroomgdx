@@ -43,6 +43,7 @@ public class GameManager extends ScreenAdapter {
     private Communication communication;
     private boolean isHost;
     private Sound moveSound;
+    private Sound killSound;
 
     public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
         board = new Piece[8][8];
@@ -79,6 +80,7 @@ public class GameManager extends ScreenAdapter {
         printBoard();
 
         moveSound = Gdx.audio.newSound(Gdx.files.internal("move.mp3"));
+        killSound = Gdx.audio.newSound(Gdx.files.internal("kill.mp3"));
     }
 
 
@@ -229,6 +231,11 @@ public class GameManager extends ScreenAdapter {
             if (contested != null) {
                 contested.remove();
             }
+
+            if (killSound != null) {
+                killSound.play();
+            }
+
             int tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
             float targetX = endCol * tileSize;
             float targetY = endRow * tileSize;
@@ -559,6 +566,9 @@ public class GameManager extends ScreenAdapter {
         }
         if(communication != null){
             communication.close();
+        }
+        if (killSound != null) {
+            killSound.dispose();
         }
 
 
