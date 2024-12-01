@@ -2,6 +2,7 @@
 package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Timer;
@@ -41,6 +42,7 @@ public class GameManager extends ScreenAdapter {
     private String legalMoves;
     private Communication communication;
     private boolean isHost;
+    private Sound moveSound;
 
     public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
         board = new Piece[8][8];
@@ -75,6 +77,8 @@ public class GameManager extends ScreenAdapter {
         stockfishAI = new StockfishAI(DEPTH, difficulty, FEN);
         legalMoves = getLegalMoves();
         printBoard();
+
+        moveSound = Gdx.audio.newSound(Gdx.files.internal("move.mp3"));
     }
 
 
@@ -259,6 +263,9 @@ public class GameManager extends ScreenAdapter {
             if(multiplayerMode){
                 String updatedFen = generateFen();
                 communication.sendFEN(updatedFen);
+            }
+            if (moveSound != null) {
+                moveSound.play(); // Play move sound
             }
 
             notifyMoveMade();
@@ -547,6 +554,9 @@ public class GameManager extends ScreenAdapter {
     }
 
     public void exitGame() {
+        if (moveSound != null) {
+            moveSound.dispose(); // Added here
+        }
         if(communication != null){
             communication.close();
         }
