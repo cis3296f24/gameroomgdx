@@ -204,6 +204,10 @@ public class ScreenManager extends Game {
             this.setScreen(getChessBoardScreen());
         }
     }
+    public void showBoard(){
+        System.out.println("Showing Board");
+        this.setScreen(getChessBoardScreen());
+    }
 
     @Override
     public void render() {
