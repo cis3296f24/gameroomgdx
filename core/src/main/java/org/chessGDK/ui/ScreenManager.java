@@ -9,6 +9,10 @@ import java.io.IOException;
 
 public class ScreenManager extends Game {
     private GameManager gm;
+    private static final int FREE_MODE = -1;
+    private static final int PUZZLE_MODE = -2;
+    private static final int MULTIPLAYER_MODE = -3;
+
 
     // Create references to different screens
     private static ScreenManager instance;
@@ -23,6 +27,12 @@ public class ScreenManager extends Game {
 
     // Variable for AI difficulty level
     private int difficulty = 0;
+
+    // For Network Setup
+    private String HostOrClient = "";
+
+    // Currently only supports localHost
+    private String serverIP = "127.0.0.1";
 
     // Private constructor to prevent external instantiation
     private ScreenManager() {}
@@ -54,10 +64,14 @@ public class ScreenManager extends Game {
         this.difficulty = difficulty;
     }
 
+    public void setHostOrClient(String HostOrClient){
+        this.HostOrClient = HostOrClient;
+    }
+
     // Add other methods to manage game state, screens, etc.
     public void playChess() {
         try {
-            gm = new GameManager(difficulty, FEN);
+            gm = new GameManager(difficulty, FEN, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -76,7 +90,23 @@ public class ScreenManager extends Game {
         try {
             FEN = puzzle.getRandomPuzzle();
             System.out.println(FEN);
-            gm = new GameManager(difficulty, FEN);
+            gm = new GameManager(PUZZLE_MODE, FEN, HostOrClient);
+            chessBoardScreen = getChessBoardScreen();
+            pauseScreen = getPauseScreen();
+            chessBoardScreen.loadTextures(gm);
+            gm.startGameLoopThread();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // Set the screen to Chess
+        this.setScreen(chessBoardScreen);
+        menuScreen.dispose();
+        menuScreen = null;
+    }
+
+    public void playMultiplayer(){
+        try {
+            gm = new GameManager(MULTIPLAYER_MODE, FEN, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -92,10 +122,11 @@ public class ScreenManager extends Game {
 
     public void playFreeMode() {
         try {
-            gm = new GameManager(-1, FEN);
+            gm = new GameManager(FREE_MODE, FEN, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
+            gm.startGameLoopThread();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -109,8 +140,8 @@ public class ScreenManager extends Game {
     public void loadSaveState() {
         try {
             String fen = "rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/4B2N/PP2PPPP/RN1QKB1R";
-            gm = new GameManager(difficulty, fen);
-            chessBoardScreen = new ChessBoardScreen();
+            gm = new GameManager(difficulty, fen, HostOrClient);
+            chessBoardScreen = getChessBoardScreen();
             chessBoardScreen.loadTextures(gm);
             //chessBoardScreen.addButtons(gm);
 
@@ -127,8 +158,10 @@ public class ScreenManager extends Game {
         // Set the screen to Menu
         gm.exitGame();
         gm = null;
-        chessBoardScreen.dispose();
-        chessBoardScreen = null;
+        if (chessBoardScreen != null) {
+            chessBoardScreen.dispose();
+            chessBoardScreen = null;
+        }
         this.setScreen(getMenuScreen());
         pauseScreen.dispose();
         pauseScreen = null;

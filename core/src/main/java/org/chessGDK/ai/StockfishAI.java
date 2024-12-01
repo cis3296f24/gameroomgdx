@@ -5,35 +5,35 @@ import java.lang.ProcessBuilder;
 import java.util.Arrays;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-import java.util.ArrayList;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
 public class StockfishAI {
     private final Process stockfishProcess;
-    private final BufferedReader inputReader;
-    private final OutputStream outputStream;
+    private final BufferedReader input;
+    private final BufferedWriter output;
     private final int depth;
     private int difficulty = 0;
+    private String FEN = "startpos";
 
-    public StockfishAI(int depth, int difficulty) throws IOException {
+    public StockfishAI(int depth, int difficulty, String fen) throws IOException {
         String path = System.getProperty("assets.path");
         this.depth = depth;
         if (path == null) {
             path = getPathForJar(path);
         }
-
         System.out.println("Root Path: " + path);
         FileHandle stockfishHandle = Gdx.files.local(path + "stockfish/stockfish-windows-x86-64-avx2.exe");
-
         ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.path());
         this.difficulty = difficulty;
         stockfishProcess = processBuilder.start();
-        inputReader = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));
-        outputStream = stockfishProcess.getOutputStream();
-        sendCommand("uci\n");
-        sendDifficulty();
-        readInfo();
+        // Sets input and
+        input = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));
+        output = new BufferedWriter(new OutputStreamWriter(stockfishProcess.getOutputStream()));
+        sendCommand("uci");
+        if (difficulty >= 0)
+            setDifficulty();
+        waitForResponse();
 
         System.out.println("Stockfish: Universal Chess Interface - initialized");
         // Close streams and process when done
@@ -59,25 +59,32 @@ public class StockfishAI {
         return path;
     }
 
-    // Send a command to Stockfish as a newline terminated string
+    // Send a command to Stockfish will add newline before sending
     private void sendCommand(String command) throws IOException {
-        outputStream.write((command).getBytes());
-        outputStream.flush();
+        output.write(command + "\n");
+        output.flush();
+        //System.out.println("command sent :" + command);
     }
 
-    private void sendDifficulty() throws IOException {
-        String command = "setoption name Skill Level value " + difficulty + "\n";
-        System.out.println("command sent: " + command);
+    private void setDifficulty() throws IOException {
+        String command = "setoption name Skill Level value " + difficulty;
         sendCommand(command);
     }
 
-    private void readInfo() throws IOException {
+    private void setPosition(String fen) throws IOException {
+        if (fen.contains("0 1"))
+            sendCommand("position startpos");
+        else
+            sendCommand("position fen " + fen);
+    }
+
+    // Wait for Stockfish's response
+    private void waitForResponse() throws IOException {
         String line;
-        while ((line = inputReader.readLine()) != null) {
-            System.out.println(line); // Print or process each line as needed
-            if (line.equals("uciok") || line.equals("readyok")) {
-                System.out.println("Stockfish: " + line);
-                break; // Break the loop on specific end markers or responses
+        while ((line = input.readLine()) != null) {
+            System.out.println(line);
+            if (line.contains("uciok") || line.contains("readyok")) {
+                break;
             }
         }
     }
@@ -85,7 +92,7 @@ public class StockfishAI {
     private String[] readMove() throws IOException {
         String[] moves = {"", ""};
         String line;
-        while ((line = inputReader.readLine()) != null) {
+        while ((line = input.readLine()) != null) {
           //  System.out.println("Stockfish:" + line);
             if (line.startsWith("bestmove")) {
                 moves[0] = line.split(" ")[1];  // Extract the move from the response
@@ -98,25 +105,20 @@ public class StockfishAI {
     }
 
     public boolean checkmate(String fen) throws IOException {
-        if (fen.isEmpty())
-            return false;
-        String toSend = "position fen " + fen + "\n";
-        sendCommand(toSend);
+        setPosition(fen);
         // Request the best move
-        toSend = "go movetime 10\n";
+        String toSend = "go movetime 10";
         sendCommand(toSend);
         String[] moves = readMove();
-        return moves[0].equalsIgnoreCase("(none)");        
+        return moves[0].equalsIgnoreCase("(none)");
     }
 
     public String getBestMove(String fen) throws IOException {
         // Send the position in FEN format
-        String toSend = "position startpos\n";
-        if (!fen.isEmpty())
-            toSend = "position fen " + fen + "\n";
-        sendCommand(toSend);
+        String toSend = fen;
+        setPosition(toSend);
         // Request the best move
-        toSend = "go movetime 50\n";
+        toSend = "go movetime 100";
         sendCommand(toSend);
 
         String[] moves = readMove();
@@ -131,11 +133,11 @@ public class StockfishAI {
 
     public void close() throws IOException {
         try {
-            if (inputReader != null) {
-                inputReader.close();
+            if (input != null) {
+                input.close();
             }
-            if (outputStream != null) {
-                outputStream.close();
+            if (output != null) {
+                output.close();
             }
             if (stockfishProcess != null) {
                 stockfishProcess.destroy();  // Terminate the Stockfish process
@@ -147,16 +149,14 @@ public class StockfishAI {
     }
     public String getLegalMoves(String fen) throws IOException {
         // Send the position in FEN format
-        String toSend = "position fen " + fen + "\n";
-        sendCommand(toSend);
-
+        setPosition(fen);
         // Request the perft command with depth 1
-        sendCommand("go perft 1\n");
+        sendCommand("go perft 1");
 
         String line;
         StringBuilder legalMoves = new StringBuilder();
         // Read Stockfish's response
-        while ((line = inputReader.readLine()) != null) {
+        while ((line = input.readLine()) != null) {
             //System.out.println("Stockfish: " + line);
 
             if (line.endsWith(": 1")) {
@@ -168,15 +168,11 @@ public class StockfishAI {
             // Break on a stopping point to avoid infinite loops
             if (line.startsWith("Nodes searched")) {
                 break;
-
-           }
-
-
+            }
         }
-
         return legalMoves.toString();
     }
-    public boolean checklLegalMoves(String move, String legalMoves){
+    public boolean parseLegalMoves(String move, String legalMoves){
         String[] MoveArray = legalMoves.split(",");
         return Arrays.asList(MoveArray).contains(move);
     }
