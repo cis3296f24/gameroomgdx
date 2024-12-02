@@ -2,6 +2,7 @@
 package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Timer;
@@ -11,6 +12,10 @@ import org.chessGDK.network.Communication;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 
+import org.chessGDK.ui.ChessBoardScreen;
+import org.chessGDK.ui.GameOverScreen;
+import org.chessGDK.ui.ScreenManager;
+
 import java.io.IOException;
 import java.util.Queue;
 import java.util.Stack;
@@ -19,6 +24,10 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.HashMap;
+import java.util.Stack;
+import java.util.TimerTask;
+
 
 
 public class GameManager extends ScreenAdapter {
@@ -39,13 +48,17 @@ public class GameManager extends ScreenAdapter {
     private Queue<String> solutionList;
     private String FEN;
     private final float duration = .15f;
+    private GameOverScreen gameOverScreen;
     private final HashMap<String, String> castleMoves;
     private String legalMoves;
     private Communication communication;
     private boolean isHost;
     private String[] bestMove;
+    private Sound moveSound;
+    private Sound killSound;
 
     public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
+
         board = new Piece[8][8];
         possibilities = new Blank[8][8];
         legalMoves = "";
@@ -75,6 +88,16 @@ public class GameManager extends ScreenAdapter {
         printBoard();
         updateBoardState();
         System.out.println("Start Color: " + (startColor ? "White" : "Black"));
+
+        halfMoves = 0;
+        castlingRights = "KQkq";
+        enPassantSquare = null;
+        screen = ScreenManager.getInstance().getChessBoardScreen();
+        gameOverScreen = new GameOverScreen();
+
+        moveSound = Gdx.audio.newSound(Gdx.files.internal("move.mp3"));
+        killSound = Gdx.audio.newSound(Gdx.files.internal("kill.mp3"));
+
     }
 
     private void setupSolutions(String solutions) {
@@ -274,6 +297,11 @@ public class GameManager extends ScreenAdapter {
             if (contested != null) {
                 contested.remove();
             }
+
+            if (killSound != null) {
+                killSound.play();
+            }
+
             int tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
             float targetX = endCol * tileSize;
             float targetY = endRow * tileSize;
@@ -299,6 +327,15 @@ public class GameManager extends ScreenAdapter {
             printBoard();
             System.out.println("Moved: " + move);
             moveList.push(move);
+
+            if(multiplayerMode){
+                String updatedFen = generateFen();
+                communication.sendFEN(updatedFen);
+            }
+            if (moveSound != null) {
+                moveSound.play(); // Play move sound
+            }
+
             return true;
         }
         return false;
@@ -343,6 +380,33 @@ public class GameManager extends ScreenAdapter {
         parsed[2] -= 'a';
         parsed[3] -= '1';
         return parsed;
+    }
+
+    private void checkforcheckmate(String fen) {
+                try {
+                    //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
+                    if (stockfishAI.checkmate(fen)) {
+                        System.out.println("Checkmate!");
+                        gameOver = true;
+
+                        Timer.schedule(new Timer.Task() {
+                            @Override
+                            public void run() {
+                                ScreenManager.getInstance().setScreen(gameOverScreen);
+                            }
+                        }, 2f); // 2 seconds delay
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+    }
+
+    private boolean checkLegalMoves(String move, String fen) {
+        if(!stockfishAI.parseLegalMoves(move, legalMoves)){
+            System.out.println("Illegal move");
+            return false;
+        }
+        return true;
     }
 
     private boolean promote(char rank, int endRow, int endCol) {
@@ -481,8 +545,14 @@ public class GameManager extends ScreenAdapter {
     }
 
     public void exitGame() {
+        if (moveSound != null) {
+            moveSound.dispose(); // Added here
+        }
         if(communication != null){
             communication.close();
+        }
+        if (killSound != null) {
+            killSound.dispose();
         }
         if (stockfishAI != null) {
             try {
