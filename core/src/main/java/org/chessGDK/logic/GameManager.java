@@ -89,10 +89,6 @@ public class GameManager extends ScreenAdapter {
         updateBoardState();
         System.out.println("Start Color: " + (startColor ? "White" : "Black"));
 
-        halfMoves = 0;
-        castlingRights = "KQkq";
-        enPassantSquare = null;
-        screen = ScreenManager.getInstance().getChessBoardScreen();
         gameOverScreen = new GameOverScreen();
 
         moveSound = Gdx.audio.newSound(Gdx.files.internal("move.mp3"));
@@ -148,7 +144,6 @@ public class GameManager extends ScreenAdapter {
         String toStock = appendLastMove(FEN);
         sendPosToStockfish(toStock);
         FEN = getFenFromAI();
-
         try {
             bestMove = getBestMove();
             legalMoves = getLegalMoves();        // Get all legal moves for after last move
@@ -162,6 +157,12 @@ public class GameManager extends ScreenAdapter {
             if (solutionList.peek() == null) {
                 System.out.println("Puzzle Completed!");
                 gameOver = true;
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        ScreenManager.getInstance().setScreen(gameOverScreen);
+                    }
+                }, 2f); // 2 seconds delay
             }
         }
         else {
@@ -244,17 +245,23 @@ public class GameManager extends ScreenAdapter {
         return stockfishAI.getFEN();
     }
 
-    private boolean checkforcheckmate(String fen) {
+    private void checkforcheckmate(String fen) {
         try {
             //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-            if(stockfishAI.checkmate(fen)){
-                System.out.println("checkmate");
+            if (stockfishAI.checkmate(fen)) {
+                System.out.println("Checkmate!");
                 gameOver = true;
+
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        ScreenManager.getInstance().setScreen(gameOverScreen);
+                    }
+                }, 2f); // 2 seconds delay
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return gameOver;
     }
 
     public boolean isLegalMove(String move) {
@@ -328,10 +335,6 @@ public class GameManager extends ScreenAdapter {
             System.out.println("Moved: " + move);
             moveList.push(move);
 
-            if(multiplayerMode){
-                String updatedFen = generateFen();
-                communication.sendFEN(updatedFen);
-            }
             if (moveSound != null) {
                 moveSound.play(); // Play move sound
             }
@@ -382,24 +385,6 @@ public class GameManager extends ScreenAdapter {
         return parsed;
     }
 
-    private void checkforcheckmate(String fen) {
-                try {
-                    //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-                    if (stockfishAI.checkmate(fen)) {
-                        System.out.println("Checkmate!");
-                        gameOver = true;
-
-                        Timer.schedule(new Timer.Task() {
-                            @Override
-                            public void run() {
-                                ScreenManager.getInstance().setScreen(gameOverScreen);
-                            }
-                        }, 2f); // 2 seconds delay
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-    }
 
     private boolean checkLegalMoves(String move, String fen) {
         if(!stockfishAI.parseLegalMoves(move, legalMoves)){
