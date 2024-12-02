@@ -20,14 +20,14 @@ public class StockfishAI {
     private List<String> returnList;
 
     public StockfishAI(int depth, int difficulty, String fen) throws IOException {
-        String path = System.getProperty("root.path");
+        String path = System.getProperty("assets.path");
         this.depth = depth;
         returnList = new ArrayList<String>();
         if (path == null) {
             path = getPathForJar(path);
         }
         System.out.println("Root Path: " + path);
-        FileHandle stockfishHandle = Gdx.files.local(path + "stockfish/stockfish-windows-x86-64-avx2.exe");
+        FileHandle stockfishHandle = Gdx.files.local("stockfish/stockfish-windows-x86-64-avx2.exe");
         ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.path());
         stockfishProcess = processBuilder.start();
         // Sets input and output
