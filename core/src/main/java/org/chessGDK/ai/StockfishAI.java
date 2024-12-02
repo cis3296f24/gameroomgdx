@@ -113,7 +113,7 @@ public class StockfishAI {
     }
 
     // Wait for Stockfish's response
-    private void waitForResponse() throws IOException {;
+    private void waitForResponse(){
         String line;
         while ((line = getLine()) != null) {
             System.out.println(line);
@@ -123,7 +123,7 @@ public class StockfishAI {
         }
     }
 
-    private String[] readMove() throws IOException {
+    private String[] readMove(){
         String[] moves = {"", ""};
         String line;
         while ((line = getLine()) != null) {
@@ -138,7 +138,7 @@ public class StockfishAI {
         return moves;
     }
 
-    public boolean checkmate(String fen) throws IOException {
+    public boolean checkmate() throws IOException {
         //setPosition(fen);
         // Request the best move
         String toSend = "go movetime 10";
@@ -163,13 +163,13 @@ public class StockfishAI {
         }
     }
 
-    public String[] getBestMove() throws IOException {
+    public String[] getBestMove(){
         String toSend = "go movetime 400";
         sendCommand(toSend);
         return readMove();
     }
 
-    public String[] getBestMove(String fen) throws IOException {
+    public String[] getBestMove(String fen){
         // Send the position in FEN format
         String toSend = fen;
         setPosition(toSend);
@@ -181,7 +181,7 @@ public class StockfishAI {
         return readMove();  // Return the best move found
     }
 
-    public String getLegalMoves() throws IOException {
+    public String getLegalMoves(){
         // Send the position in FEN format
         // Request the perft command with depth 1
         sendCommand("go perft 1");
@@ -193,7 +193,6 @@ public class StockfishAI {
             //System.out.println("Stockfish: " + line);
             // Break on a stopping point to avoid infinite loops
             if (line.startsWith("Nodes searched")) {
-                legalMoves.deleteCharAt(legalMoves.length() - 1);
                 break;
             }
             // Look for the "Legal moves:" line

@@ -12,11 +12,11 @@ import org.chessGDK.network.Communication;
 import org.chessGDK.pieces.*;
 import org.chessGDK.ai.StockfishAI;
 
-import org.chessGDK.ui.ChessBoardScreen;
 import org.chessGDK.ui.GameOverScreen;
 import org.chessGDK.ui.ScreenManager;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.HashMap;
@@ -24,38 +24,32 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.HashMap;
-import java.util.Stack;
-import java.util.TimerTask;
-
-
 
 public class GameManager extends ScreenAdapter {
     private final BlockingQueue<String> moveQueue = new LinkedBlockingQueue<>();
     private Thread gameLoopThread;
 
     private boolean whiteTurn;
-    private boolean startColor;
+    private boolean playerColor;
     private final Piece[][] board;
     private final Blank[][] possibilities;
     private final StockfishAI stockfishAI;
-    private final int DEPTH = 12;
     private boolean freeMode = false;
     private boolean puzzleMode = false;
     public volatile boolean gameOver = false;
-    private boolean multiplayerMode = false;
+    public boolean multiplayerMode = false;
     private final Stack<String> moveList;
     private Queue<String> solutionList;
     private String FEN;
     private final float duration = .15f;
-    private GameOverScreen gameOverScreen;
+    private final GameOverScreen gameOverScreen;
     private final HashMap<String, String> castleMoves;
     private String legalMoves;
     private Communication communication;
     private boolean isHost;
     private String[] bestMove;
-    private Sound moveSound;
-    private Sound killSound;
+    private final Sound moveSound;
+    private final Sound killSound;
 
     public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
 
@@ -74,8 +68,13 @@ public class GameManager extends ScreenAdapter {
         else if (difficulty == -3) {
             multiplayerMode = true;
             isHost = HostOrClient.equals("Host");
-            communication = new Communication(this, isHost);
+            try {
+                communication = new Communication(this, isHost);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
         }
+        int DEPTH = 12;
         stockfishAI = new StockfishAI(DEPTH, difficulty, FEN);
         FEN = getFenFromAI();
         castleMoves = new HashMap<>();
@@ -87,7 +86,7 @@ public class GameManager extends ScreenAdapter {
         parseFen(FEN);
         printBoard();
         updateBoardState();
-        System.out.println("Start Color: " + (startColor ? "White" : "Black"));
+        System.out.println("Start Color: " + (playerColor ? "White" : "Black"));
 
         gameOverScreen = new GameOverScreen();
 
@@ -115,15 +114,16 @@ public class GameManager extends ScreenAdapter {
         while (!gameOver) {
             try {
                 // If it's the player's turn, wait for a move from the queue
+                checkforcheckmate();
                 System.out.println("Waiting for move...");
                 String move = moveQueue.take(); // Blocks until a move is added
-                if(multiplayerMode && (whiteTurn == startColor)){
+                if(multiplayerMode && (whiteTurn == playerColor)){
                     communication.sendMove(move);
                 }
                 movePiece(move);
                 updateBoardState();
                 toggleTurn();
-                checkforcheckmate(move);
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("Game loop interrupted!");
@@ -131,13 +131,6 @@ public class GameManager extends ScreenAdapter {
             }
         }
         System.out.printf("Game over: %s - %s\n",gameOver, Thread.currentThread().getName());
-    }
-
-    private boolean isAITurn() {
-        if (puzzleMode) {
-            return whiteTurn == startColor;
-        }
-        return !whiteTurn; // Assuming AI is always black and whiteTurn tracks player turns
     }
 
     private void updateBoardState() {
@@ -172,10 +165,11 @@ public class GameManager extends ScreenAdapter {
 
     public void toggleTurn() {
         whiteTurn = !whiteTurn;
-        if (puzzleMode)
-            puzzleTurns();
-        else if (freeMode)
-            freeTurns();
+        if (freeMode)
+            return;
+        if (puzzleMode && solutionList.isEmpty()) {
+            gameOver = true;
+        }
         else if (multiplayerMode)
             multiplayerTurns();
         else
@@ -183,25 +177,10 @@ public class GameManager extends ScreenAdapter {
     }
 
     private void normalTurns() {
-        if (whiteTurn == startColor)
+        if (whiteTurn == playerColor)
             playerTurn();
         else
             aiTurn();
-    }
-
-    private void freeTurns() {
-        playerTurn();
-    }
-
-    private void puzzleTurns() {
-        if (solutionList.isEmpty()) {
-            gameOver = true;
-            return;
-        }
-        if (whiteTurn != startColor)
-            aiTurn();
-        else
-            playerTurn();
     }
 
     private void multiplayerTurns() {
@@ -233,10 +212,6 @@ public class GameManager extends ScreenAdapter {
         return stockfishAI.getBestMove();
     }
 
-    public String[] getBestMove(String fen) throws IOException {
-        return stockfishAI.getBestMove(fen);
-    }
-
     public String getLegalMoves() throws IOException {
         return stockfishAI.getLegalMoves();
     }
@@ -245,10 +220,10 @@ public class GameManager extends ScreenAdapter {
         return stockfishAI.getFEN();
     }
 
-    private void checkforcheckmate(String fen) {
+    private void checkforcheckmate() {
         try {
             //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
-            if (stockfishAI.checkmate(fen)) {
+            if (stockfishAI.checkmate()) {
                 System.out.println("Checkmate!");
                 gameOver = true;
 
@@ -278,16 +253,16 @@ public class GameManager extends ScreenAdapter {
         return true;
     }
 
-    public boolean queueMove(String move) {
-        return moveQueue.add(move);
+    public void queueMove(String move) {
+        moveQueue.add(move);
     }
 
-    public boolean movePiece(String move) {
+    public void movePiece(String move) {
         if (move.isEmpty())
-            return false;
+            return;
         if (puzzleMode && !solutionList.isEmpty())
             if(!solutionList.peek().equals(move))
-                return false;
+                return;
             else
                 solutionList.remove();
         char[] parsedMove = parseMove(move);
@@ -339,9 +314,7 @@ public class GameManager extends ScreenAdapter {
                 moveSound.play(); // Play move sound
             }
 
-            return true;
         }
-        return false;
     }
 
     //King : "e1c1 e1g1 e8c8 e8g8", Rook: "a1d1 h1f1 a8d8 h8f8"
@@ -360,7 +333,6 @@ public class GameManager extends ScreenAdapter {
         board[endRow][endCol] = board[startRow][startCol];
         board[startRow][startCol] = null;
         board[endRow][endCol].addAction(Actions.moveTo(targetX, targetY, duration, Interpolation.linear));
-
     }
 
     public void undo() {
@@ -385,31 +357,65 @@ public class GameManager extends ScreenAdapter {
         return parsed;
     }
 
-
-    private boolean checkLegalMoves(String move, String fen) {
-        if(!stockfishAI.parseLegalMoves(move, legalMoves)){
-            System.out.println("Illegal move");
-            return false;
-        }
-        return true;
-    }
-
-    private boolean promote(char rank, int endRow, int endCol) {
+    private void promote(char rank, int endRow, int endCol) {
+        int tileSize;
+        int targetX;
+        int targetY;
+        Piece piece;
         switch (rank) {
             case 'q':
-                board[endRow][endCol] = new Queen(whiteTurn);
-                return true;
+                piece = board[endRow][endCol];
+                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
+                targetX = endCol * tileSize;
+                targetY = endRow * tileSize;
+                board[endRow][endCol] = new Queen(piece.isWhite());
+                board[endRow][endCol].setPosition(targetX,targetY);
+                board[endRow][endCol].setWidth(piece.getWidth());
+                board[endRow][endCol].setHeight(piece.getHeight());
+                board[endRow][endCol].setVisible(true);
+                piece.getStage().addActor(board[endRow][endCol]);
+                piece.remove();
+                return;
             case 'r':
-                board[endRow][endCol] = new Rook(whiteTurn);
-                return true;
+                piece = board[endRow][endCol];
+                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
+                targetX = endCol * tileSize;
+                targetY = endRow * tileSize;
+                board[endRow][endCol] = new Rook(piece.isWhite());
+                board[endRow][endCol].setPosition(targetX,targetY);
+                board[endRow][endCol].setWidth(piece.getWidth());
+                board[endRow][endCol].setHeight(piece.getHeight());
+                board[endRow][endCol].setVisible(true);
+                piece.getStage().addActor(board[endRow][endCol]);
+                piece.remove();
+                return;
             case 'b':
-                board[endRow][endCol] = new Bishop(whiteTurn);
-                return true;
+                piece = board[endRow][endCol];
+                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
+                targetX = endCol * tileSize;
+                targetY = endRow * tileSize;
+                board[endRow][endCol] = new Bishop(piece.isWhite());
+                board[endRow][endCol].setPosition(targetX,targetY);
+                board[endRow][endCol].setWidth(piece.getWidth());
+                board[endRow][endCol].setHeight(piece.getHeight());
+                board[endRow][endCol].setVisible(true);
+                piece.getStage().addActor(board[endRow][endCol]);
+                piece.remove();
+                return;
             case 'n':
-                board[endRow][endCol] = new Knight(whiteTurn);
-                return true;
+                piece = board[endRow][endCol];
+                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
+                targetX = endCol * tileSize;
+                targetY = endRow * tileSize;
+                board[endRow][endCol] = new Knight(piece.isWhite());
+                board[endRow][endCol].setPosition(targetX,targetY);
+                board[endRow][endCol].setWidth(piece.getWidth());
+                board[endRow][endCol].setHeight(piece.getHeight());
+                board[endRow][endCol].setVisible(true);
+                piece.getStage().addActor(board[endRow][endCol]);
+                piece.remove();
+                return;
             default:
-                return false;
         }
     }
 
@@ -454,8 +460,8 @@ public class GameManager extends ScreenAdapter {
     }
 
     public void parseFen(String fen){
-        for(int i = 0; i < board.length; i++) {
-            Arrays.fill(board[i], null);
+        for (Piece[] pieces : board) {
+            Arrays.fill(pieces, null);
         }
         for (int i = 0; i < possibilities.length; i++) {
             for (int j = 0; j < possibilities[i].length; j++) {
@@ -482,17 +488,17 @@ public class GameManager extends ScreenAdapter {
         String[] parts = fen.split(" ");
         whiteTurn = parts[1].equals("w");
         if ((multiplayerMode && !isHost) || puzzleMode)
-            startColor = !whiteTurn;
+            playerColor = !whiteTurn;
         else
-            startColor = whiteTurn;
+            playerColor = whiteTurn;
     }
 
     public boolean isWhiteTurn() {
         return whiteTurn;
     }
 
-    public boolean isStartColor() {
-        return startColor;
+    public boolean getPlayerColor() {
+        return playerColor;
     }
 
     public boolean isGameOver() {

@@ -1,5 +1,6 @@
 package org.chessGDK.ui;
 
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 
 import org.chessGDK.logic.GameManager;
@@ -26,10 +27,9 @@ public class ChessBoardScreen implements Screen {
     private Piece[][] board;
     private Blank[][] possibilities;
     public Stage stage;
-    private Skin skin;
+    public Skin skin;
     private PieceInputHandler inputHandler;
-    private OrthographicCamera camera;
-    private puzzleFENs puzzle;
+    private final OrthographicCamera camera;
 
     public ChessBoardScreen() {
         batch = new SpriteBatch();
@@ -46,7 +46,7 @@ public class ChessBoardScreen implements Screen {
         boardTexture = new Texture("brown.png");
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
-        inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
+        inputHandler = new PieceInputHandler(this, gm, camera, board, possibilities, TILE_SIZE);
         // Pieces load textures when created, placing them displays them
         for(int i = 0; i < board.length; i++) {
             for(int j = 0; j < board[i].length; j++) {
@@ -62,10 +62,6 @@ public class ChessBoardScreen implements Screen {
                 }
             }
         }
-    }
-
-    public Stage getStage() {
-        return stage;
     }
 
     @Override
