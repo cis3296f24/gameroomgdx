@@ -71,7 +71,7 @@ public class PieceInputHandler extends InputAdapter {
             if(isDragging || !firstClick)
                 cancelLift();
             System.out.println("Switching to the menu screen");
-            ScreenManager.getInstance().togglePause();
+            ScreenManager.getInstance().pauseGame();
             return true;
         }
         return false;
@@ -102,20 +102,21 @@ public class PieceInputHandler extends InputAdapter {
             System.out.println("No piece at: " + (char) (liftX + 'a') + ", " + (char) (liftY + '1'));
             return;
         }
-        else if (board[liftY][liftX].isWhite() != gm.isWhiteTurn()) {
+        else if (board[liftY][liftX].isWhite() != gm.isStartColor()) {
             System.out.println("Not your turn");
             return;
         }
         hiddenPiece = board[liftY][liftX];
 
         selectedPiece = board[liftY][liftX].copy();
-
         selectedPiece.setPosition(worldCoordinates.x - 50, worldCoordinates.y - 50);
         selectedPiece.setWidth(hiddenPiece.getWidth());
         selectedPiece.setHeight(hiddenPiece.getHeight());
         selectedPiece.setVisible(true);
+
         hiddenPiece.setVisible(false);
         hiddenPiece.getParent().addActor(selectedPiece);
+
         if (selectedPiece.isWhite() != gm.isWhiteTurn()) {
             System.out.println("Not your turn");
             return;
@@ -154,13 +155,12 @@ public class PieceInputHandler extends InputAdapter {
                 (char) liftChars.y +
                 (char) placeX +
                 (char) placeY;
-        if (gm.movePiece(move)) {
+        if (gm.isLegalMove(move)) {
             System.out.println("Placed piece at: " + (char) placeX + ", " + (char) placeY);
-            placeX -= 'a';
-            placeY -= '1';
             isDragging = false;
             clearPossible();
             selectedPiece.remove();
+            gm.queueMove(move);
         } else {
             liftChars.x -= 'a';
             liftChars.y -= '1';
@@ -180,7 +180,6 @@ public class PieceInputHandler extends InputAdapter {
         }
         for (String string : legalMoves.split(",")) {
             if (string.startsWith("" + (char) liftChars.x + (char) liftChars.y)) {
-                System.out.println("Legal move: " + string);
                 int col = string.charAt(2) - 'a';
                 int row = string.charAt(3) - '1';
                 Blank temp = possibilities[row][col];

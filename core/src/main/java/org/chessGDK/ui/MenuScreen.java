@@ -38,7 +38,6 @@ public class MenuScreen implements Screen {
         this.skin = new Skin(Gdx.files.internal("uiskin.json"));
         Gdx.input.setInputProcessor(stage);
 
-        createMenuButtons();
     }
 
     // Create all menu buttons and UI components
@@ -208,6 +207,7 @@ public class MenuScreen implements Screen {
     // Screen lifecycle methods
     @Override
     public void show() {
+        createMenuButtons();
         Gdx.input.setInputProcessor(stage);
     }
 

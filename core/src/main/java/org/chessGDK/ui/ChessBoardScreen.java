@@ -35,9 +35,9 @@ public class ChessBoardScreen implements Screen {
         batch = new SpriteBatch();
         camera = new OrthographicCamera(); // Initialize the camera
         camera.setToOrtho(false, 800, 800); // Set the viewport size
-
         // Initialize the Stage and Skin for Buttons (not in use)
         stage = new Stage(new ScreenViewport());
+
         skin = new Skin(Gdx.files.internal("uiskin.json")); // Load your skin file
 
     }
@@ -47,7 +47,6 @@ public class ChessBoardScreen implements Screen {
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
         inputHandler = new PieceInputHandler(gm, camera, board, possibilities, TILE_SIZE);
-        Gdx.input.setInputProcessor(inputHandler);
         // Pieces load textures when created, placing them displays them
         for(int i = 0; i < board.length; i++) {
             for(int j = 0; j < board[i].length; j++) {
@@ -63,6 +62,10 @@ public class ChessBoardScreen implements Screen {
                 }
             }
         }
+    }
+
+    public Stage getStage() {
+        return stage;
     }
 
     @Override
@@ -97,6 +100,8 @@ public class ChessBoardScreen implements Screen {
     public void dispose() {
         stage.dispose();
         skin.dispose();
+        batch.dispose();
+        inputHandler = null;
         System.out.println("ChessBoardScreen disposed");
     }
 
@@ -117,12 +122,12 @@ public class ChessBoardScreen implements Screen {
     @Override
     public void pause() {
         // Invoked when your application is paused.
-        ScreenManager.getInstance().togglePause();
     }
 
     @Override
     public void resume() {
         // Invoked when your application is resumed after pause.
+
     }
 
     @Override

@@ -54,7 +54,7 @@ public class GameOverScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 System.out.println("Switching to the chess screen");
-                sm.exitChess();  // Exits the current game
+                sm.exitGame();  // Exits the current game
                 sm.playChess();  // Starts a new game
             }
         });
@@ -80,10 +80,9 @@ public class GameOverScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 System.out.println("Exiting the game");
-                sm.exitChess();
+                sm.exitGame();
             }
         });
-
 
         stage.addActor(playButton);
         stage.addActor(exitButton);
