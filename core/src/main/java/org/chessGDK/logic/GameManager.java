@@ -110,6 +110,7 @@ public class GameManager extends ScreenAdapter {
     }
 
     private void gameLoop () {
+        // Handles starting puzzles and loading from save states
         if(whiteTurn != playerColor)
             aiTurn();
         while (!gameOver) {
@@ -277,6 +278,13 @@ public class GameManager extends ScreenAdapter {
         Piece contested = board[endRow][endCol];
         // Ensure the right piece color is moving according to the turn
         if (piece != null) {
+            if (piece instanceof Pawn) {
+                if (FEN.contains(move.substring(2))) {
+                    int offset = piece.isWhite() ? -1 : +1;
+                    contested = board[endRow + offset][endCol];
+                    board[endRow + offset][endCol] = null;
+                }
+            }
             if (contested != null) {
                 contested.remove();
             }
@@ -302,7 +310,7 @@ public class GameManager extends ScreenAdapter {
             if (piece instanceof Rook) {
                 piece.setMoved(true);
             }
-            if (piece instanceof King){
+            if (piece instanceof King) {
                 piece.setMoved(true);
                 handleCastling(move);
             }
