@@ -168,7 +168,6 @@ public class PieceInputHandler extends InputAdapter {
                 if (needsPromotion) {
                     // Show promotion dialog and defer move queuing
                     showPromotionOptions();
-                    selectedPiece.remove();
                     return; // Exit early, move will be queued in the callback
                 }
             }
@@ -188,7 +187,7 @@ public class PieceInputHandler extends InputAdapter {
 
     public void showPromotionOptions() {
         InputProcessor prevInput = Gdx.input.getInputProcessor();
-        Dialog promotionDialog = new Dialog("Choose Promotion", screen.skin) {
+        Dialog promotionDialog = new Dialog("Choose a new Rank", screen.skin) {
             @Override
             protected void result(Object object) {
                 String choice = (String) object;
@@ -200,6 +199,7 @@ public class PieceInputHandler extends InputAdapter {
                 gm.queueMove(move);
 
                 // Reset state after queuing the move
+                selectedPiece.remove();
                 firstClick = true;
                 selectedPiece = null;
                 liftChars = null;
