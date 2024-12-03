@@ -11,8 +11,18 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.stream.Stream;
 
 public class MenuScreen implements Screen {
 
@@ -92,9 +102,54 @@ public class MenuScreen implements Screen {
                 .width(BUTTON_WIDTH).height(BUTTON_HEIGHT).padBottom(15);
         table.row();
 
+        //Allow user to select save
+        createSavesSelectBox(table);
+
         // Add Exit button
         table.add(createMenuButton("Exit", "Close the application", Gdx.app::exit))
                 .width(BUTTON_WIDTH).height(BUTTON_HEIGHT).padBottom(15);
+    }
+    //Create saved games select box
+    private void createSavesSelectBox(Table table){
+        File folder = new File("saves");
+        if(!folder.exists()){
+            folder.mkdirs();
+        }
+        Array<String> arr = new Array<>();
+        String folderPath = "saves"; // Replace with your folder path
+
+        // Using Files.walk() to traverse the folder and its subfolders
+        try (Stream<Path> paths = Files.walk(Path.of(folderPath))) {
+            paths
+                    .filter(Files::isRegularFile) // Filter for only files
+                    .forEach(filePath -> {
+                        // Read file content
+                        arr.add(String.valueOf(filePath.getFileName()));
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        selectBox = new SelectBox<>(skin);
+        selectBox.setItems(arr);
+
+        selectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String selected = selectBox.getSelected();
+                System.out.println(selected);
+                try (BufferedReader br = new BufferedReader(new FileReader("saves/"+selected))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        screenManager.setSavedFEN(line);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error reading file: " + e.getMessage());
+                }
+            }
+        });
+
+        table.add(selectBox).padBottom(15);
+        table.row();
     }
 
     // Create Difficulty SelectBox

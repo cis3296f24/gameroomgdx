@@ -5,7 +5,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import org.chessGDK.logic.GameManager;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 
@@ -27,6 +33,7 @@ public class ScreenManager extends Game {
 
     private boolean paused = false;
     private puzzleFENs puzzle = new puzzleFENs();
+    private String savedFEN = START_FEN;
 
 
 
@@ -147,13 +154,7 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.
     public void loadSaveState() {
         try {
-            String fen = "position startpos";
-            FileHandle file;
-            if (Gdx.files.local("game_save.txt").exists()) {
-                file = Gdx.files.local("game_save.txt");
-                fen = file.readString();
-            }
-            gm = new GameManager(difficulty, fen, HostOrClient);
+            gm = new GameManager(difficulty, savedFEN, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
             chessBoardScreen.loadTextures(gm);
@@ -263,6 +264,10 @@ public class ScreenManager extends Game {
             pauseScreen.dispose();
             chessBoardScreen = null;
         }
+    }
+
+    public void setSavedFEN(String fen){
+        savedFEN = fen;
     }
 
     // Add other methods to manage game state, screens, etc.
