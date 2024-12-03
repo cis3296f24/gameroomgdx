@@ -27,7 +27,7 @@ public class StockfishAI {
             path = getPathForJar(path);
         }
         System.out.println("Root Path: " + path);
-        FileHandle stockfishHandle = Gdx.files.local("stockfish/stockfish-windows-x86-64-avx2.exe");
+        FileHandle stockfishHandle = Gdx.files.local(path + "stockfish/stockfish-windows-x86-64-avx2.exe");
         ProcessBuilder processBuilder = new ProcessBuilder(stockfishHandle.path());
         stockfishProcess = processBuilder.start();
         // Sets input and output
