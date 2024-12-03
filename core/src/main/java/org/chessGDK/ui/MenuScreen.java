@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -54,7 +55,7 @@ public class MenuScreen implements Screen {
         stage.addActor(tooltipLabel);
 
         // Add Title Label
-        Label titleLabel = new Label("Checkmate AI", skin);
+        Label titleLabel = new Label("Chess", skin);
         titleLabel.setFontScale(2.5f);
         titleLabel.setColor(Color.WHITE);
         table.add(titleLabel).padBottom(40).center();
@@ -132,7 +133,42 @@ public class MenuScreen implements Screen {
                 System.out.println(difficultyText);
             }
         });
+        selectBox.getList().addListener(new InputListener() {
+            @Override
+            public boolean mouseMoved(InputEvent event, float x, float y) {
+                int index = selectBox.getList().getSelectedIndex();
+                if (index != -1) {
+                    // Get the stage coordinates of the list
+                    Vector2 listPosition = selectBox.getList().localToStageCoordinates(new Vector2(0, 0));
 
+                    // Calculate the Y-coordinate of the selected item
+                    float itemHeight = selectBox.getList().getItemHeight();
+                    float selectedItemY = listPosition.y + selectBox.getList().getHeight() - (index + 1) * itemHeight;
+
+                    // Set the tooltip position to the right of the selected item
+                    tooltipLabel.setPosition(listPosition.x + selectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
+                    switch(index) {
+                        case 0:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 800");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 1:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 1200");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 2:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 1600");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 3:
+                            tooltipLabel.setText("Play against an AI with an ELO rating of 2000");
+                            tooltipLabel.setVisible(true);
+                            break;
+                    }
+                }
+                return super.mouseMoved(event, x, y);
+            }
+        });
         table.add(selectBox).padBottom(15);
         table.row();
     }
@@ -154,6 +190,34 @@ public class MenuScreen implements Screen {
                     screenManager.setHostOrClient("Client");
                     System.out.println("Setting up client");
                 }
+            }
+        });
+        HOCselectBox.getList().addListener(new InputListener() {
+            @Override
+            public boolean mouseMoved(InputEvent event, float x, float y) {
+                int index = HOCselectBox.getList().getSelectedIndex();
+                if (index != -1) {
+                    // Get the stage coordinates of the list
+                    Vector2 listPosition = HOCselectBox.getList().localToStageCoordinates(new Vector2(0, 0));
+
+                    // Calculate the Y-coordinate of the selected item
+                    float itemHeight = HOCselectBox.getList().getItemHeight();
+                    float selectedItemY = listPosition.y + HOCselectBox.getList().getHeight() - (index + 1) * itemHeight;
+
+                    // Set the tooltip position to the right of the selected item
+                    tooltipLabel.setPosition(listPosition.x + HOCselectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
+                    switch(index) {
+                        case 0:
+                            tooltipLabel.setText("Host a server for client");
+                            tooltipLabel.setVisible(true);
+                            break;
+                        case 1:
+                            tooltipLabel.setText("Connect as a client to server");
+                            tooltipLabel.setVisible(true);
+                            break;
+                    }
+                }
+                return super.mouseMoved(event, x, y);
             }
         });
 
