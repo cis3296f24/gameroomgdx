@@ -42,12 +42,7 @@ public abstract class Piece extends Actor {
         pieceTexture = texture;
         return true;
     }
-    public boolean isAnimating() {
-        return animating;
-    }
-    public void toggleAnimating() {
-        animating = !animating;
-    }
+
     public void draw(Batch batch, float parentAlpha) {
         if (getTexture() != null) {
             batch.draw(getTexture(), getX(), getY(), getWidth(), getHeight());
@@ -55,8 +50,5 @@ public abstract class Piece extends Actor {
     }
 
     public abstract Piece copy();
-    public boolean enPassant(String move) {
-        return false;
-    }
 
 }

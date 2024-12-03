@@ -1,12 +1,13 @@
 package org.chessGDK.ui;
 
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.Blank;
+import org.chessGDK.pieces.Pawn;
 import org.chessGDK.pieces.Piece;
 
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import org.chessGDK.utils.CoordinateUtils;
@@ -19,11 +20,13 @@ public class PieceInputHandler extends InputAdapter {
     private Piece selectedPiece = null;
     private Piece hiddenPiece = null;
     private Vector2 liftChars = new Vector2();
-    private Vector3 liftPositon = new Vector3();
-    private Vector3 dropPosition = new Vector3();
+    private final Vector3 liftPositon = new Vector3();
+    private final Vector3 dropPosition = new Vector3();
     private boolean firstClick = true; // To track if it's the first click
     private boolean isDragging = false;
+    private String move;
 
+    private final ChessBoardScreen screen;
     private final GameManager gm;
     private final Camera camera;
     private final Piece[][] board;
@@ -32,7 +35,9 @@ public class PieceInputHandler extends InputAdapter {
 
     private CoordinateUtils coords;
 
-    public PieceInputHandler(GameManager gm, Camera camera, Piece[][] board, Blank[][] p, int tileSize) {
+    public PieceInputHandler(ChessBoardScreen screen, GameManager gm, Camera camera, Piece[][] board, Blank[][] p, int tileSize) {
+        move = "";
+        this.screen = screen;
         this.gm = gm;
         this.camera = camera;
         this.board = board;
@@ -95,17 +100,20 @@ public class PieceInputHandler extends InputAdapter {
 
         int liftX = coords.worldToBoardX(worldCoordinates.x);
         int liftY = coords.worldToBoardY(worldCoordinates.y);
-        int oldX = coords.worldToBoardX(worldCoordinates.x);
-        int oldY = coords.worldToBoardY(worldCoordinates.y);
         // First click: Select a piece if there's one at this position
         if (board[liftY][liftX] == null) {
             System.out.println("No piece at: " + (char) (liftX + 'a') + ", " + (char) (liftY + '1'));
             return;
         }
-        else if (board[liftY][liftX].isWhite() != gm.isStartColor()) {
+        else if (gm.multiplayerMode && (board[liftY][liftX].isWhite() != gm.getPlayerColor())) {
             System.out.println("Not your turn");
             return;
         }
+        else if (board[liftY][liftX].isWhite() != gm.isWhiteTurn()) {
+            System.out.println("Not your turn");
+            return;
+        }
+        move = "";
         hiddenPiece = board[liftY][liftX];
 
         selectedPiece = board[liftY][liftX].copy();
@@ -116,18 +124,13 @@ public class PieceInputHandler extends InputAdapter {
 
         hiddenPiece.setVisible(false);
         hiddenPiece.getParent().addActor(selectedPiece);
-
-        if (selectedPiece.isWhite() != gm.isWhiteTurn()) {
-            System.out.println("Not your turn");
-            return;
-        }
         isDragging = true;
         firstClick = false; // Switch to second click
         liftX += 'a';
         liftY += '1';
         liftChars = new Vector2(liftX, liftY);
         System.out.println("Selected piece at: " + (char) liftX + ", " + (char) liftY);
-        showPossible(oldX, oldY);
+        showPossible();
 
     }
 
@@ -149,18 +152,29 @@ public class PieceInputHandler extends InputAdapter {
         int placeX = coords.worldToBoardX(worldCoordinates.x);
         int placeY = coords.worldToBoardY(worldCoordinates.y);
 
-        placeX += 'a';
-        placeY += '1';
-        String move = String.valueOf((char) liftChars.x) +
-                (char) liftChars.y +
-                (char) placeX +
-                (char) placeY;
+        move = String.valueOf((char) liftChars.x) +
+            (char) liftChars.y +
+            (char) (placeX + 'a') +
+            (char) (placeY + '1');
         if (gm.isLegalMove(move)) {
-            System.out.println("Placed piece at: " + (char) placeX + ", " + (char) placeY);
+            System.out.println("Placed piece at: " + (char) (placeX + 'a') + ", " + (char) (placeY + '1'));
             isDragging = false;
             clearPossible();
-            selectedPiece.remove();
+
+            // Check for pawn promotion
+            if (selectedPiece instanceof Pawn) {
+                boolean isWhite = hiddenPiece.isWhite();
+                boolean needsPromotion = (isWhite && placeY == 7) || (!isWhite && placeY == 0);
+                if (needsPromotion) {
+                    // Show promotion dialog and defer move queuing
+                    showPromotionOptions();
+                    return; // Exit early, move will be queued in the callback
+                }
+            }
+
+            // If no promotion, queue the move immediately
             gm.queueMove(move);
+            selectedPiece.remove();
         } else {
             liftChars.x -= 'a';
             liftChars.y -= '1';
@@ -171,8 +185,44 @@ public class PieceInputHandler extends InputAdapter {
         liftChars = null;
     }
 
-    private void showPossible(int oldX, int oldY) {
-        String legalMoves = "";
+    public void showPromotionOptions() {
+        InputProcessor prevInput = Gdx.input.getInputProcessor();
+        Dialog promotionDialog = new Dialog("Choose a new Rank", screen.skin) {
+            @Override
+            protected void result(Object object) {
+                String choice = (String) object;
+                System.out.println(choice);
+                // Append promotion choice to the move
+                move += choice;
+
+                // Queue the move after promotion choice is made
+                gm.queueMove(move);
+
+                // Reset state after queuing the move
+                selectedPiece.remove();
+                firstClick = true;
+                selectedPiece = null;
+                liftChars = null;
+            }
+
+            @Override
+            public void hide() {
+                this.remove();
+                Gdx.input.setInputProcessor(prevInput);
+            }
+        };
+
+        promotionDialog.text("Select a piece:");
+        promotionDialog.button("Queen", "q");
+        promotionDialog.button("Rook", "r");
+        promotionDialog.button("Bishop", "b");
+        promotionDialog.button("Knight", "n");
+        promotionDialog.show(screen.stage);
+        Gdx.input.setInputProcessor(screen.stage);
+    }
+
+    private void showPossible() {
+        String legalMoves;
         try {
             legalMoves = gm.getLegalMoves();
         } catch (IOException e) {
@@ -186,14 +236,6 @@ public class PieceInputHandler extends InputAdapter {
                 temp.setTexture(new Texture("green.png"));
             }
         }
-//        for(int col = 0; col <8; ++col){
-//            for(int row = 0; row<8; ++row){
-//                if(!(oldX == col && oldY == row) && selectedPiece.isValidMove(oldX, oldY, col, row, board)){
-//                    Blank temp = possibilities[row][col];
-//                    temp.setTexture(new Texture("green.png"));
-//                }
-//            }
-//        }
     }
 
     private void clearPossible() {
@@ -209,6 +251,4 @@ public class PieceInputHandler extends InputAdapter {
         TILE_SIZE = tileSize;
         coords = new CoordinateUtils(tileSize);
     }
-
-
 }

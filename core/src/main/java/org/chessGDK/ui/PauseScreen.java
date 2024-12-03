@@ -18,11 +18,12 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 
 public class PauseScreen implements Screen{
+    // Constants
     private static final int BUTTON_WIDTH = 250;
-    private static final int BUTTON_HEIGHT = 50;
-    private static final float FONT_SCALE = 1.2f;
-    private static final Color BUTTON_COLOR = new Color(0.2f, 0.6f, 1f, 1); // Light blue
-    private static final Color HOVER_COLOR = new Color(0.3f, 0.7f, 1f, 1);  // Slightly lighter blue on hover
+    private static final int BUTTON_HEIGHT = 60;
+    private static final float FONT_SCALE = 1.5f;
+    private static final Color BUTTON_COLOR = new Color(0.3f, 0.2f, 0.1f, 1); // Brown for chess theme
+    private static final Color HOVER_COLOR = new Color(0.4f, 0.3f, 0.2f, 1);  // Lighter brown on hover
     private Label tooltipLabel;
 
     private Stage stage;
@@ -45,21 +46,28 @@ public class PauseScreen implements Screen{
         TextButton playButton = createMenuButton("Resume", "Resumes the game",
                                             "Switching to game screen", sm::resumeGame);
         playButton.setPosition(Gdx.graphics.getWidth() / 2f - playButton.getWidth() / 2f,
-                               Gdx.graphics.getHeight() / 2f - playButton.getHeight() / 2f + 60);
+                               Gdx.graphics.getHeight() / 2f - playButton.getHeight() / 2f + 105);
         stage.addActor(playButton);
 
         // Add the exit to menu button
         TextButton exitToMenu = createMenuButton("Return to Menu", "Exits to main menu",
                                                 "Exiting to menu", sm::exitGame);
         exitToMenu.setPosition(Gdx.graphics.getWidth() / 2f - exitToMenu.getWidth() / 2f,
-                               Gdx.graphics.getHeight() / 2f - exitToMenu.getHeight() / 2f);
+                               Gdx.graphics.getHeight() / 2f - exitToMenu.getHeight() / 2f + 35);
         stage.addActor(exitToMenu);
+
+        // Add the Save Game button
+        TextButton saveGame = createMenuButton("Save Game", "Saves game in executable folder",
+            "Saving Game Fen", sm::saveGame);
+        saveGame.setPosition(Gdx.graphics.getWidth() / 2f - saveGame.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2f - saveGame.getHeight() / 2f - 35);
+        stage.addActor(saveGame);
 
         // Add the exit application button
         TextButton exitApp = createMenuButton("Exit App", "Fully closes the app",
                                             "Exiting App", Gdx.app::exit);
         exitApp.setPosition(Gdx.graphics.getWidth() / 2f - exitApp.getWidth() / 2f,
-                            Gdx.graphics.getHeight() / 2f - exitApp.getHeight() / 2f - 60);
+                            Gdx.graphics.getHeight() / 2f - exitApp.getHeight() / 2f - 105);
         stage.addActor(exitApp);
 
         stage.addListener(new InputListener() {
