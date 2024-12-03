@@ -45,21 +45,28 @@ public class PauseScreen implements Screen{
         TextButton playButton = createMenuButton("Resume", "Resumes the game",
                                             "Switching to game screen", sm::resumeGame);
         playButton.setPosition(Gdx.graphics.getWidth() / 2f - playButton.getWidth() / 2f,
-                               Gdx.graphics.getHeight() / 2f - playButton.getHeight() / 2f + 60);
+                               Gdx.graphics.getHeight() / 2f - playButton.getHeight() / 2f + 90);
         stage.addActor(playButton);
 
         // Add the exit to menu button
         TextButton exitToMenu = createMenuButton("Return to Menu", "Exits to main menu",
                                                 "Exiting to menu", sm::exitGame);
         exitToMenu.setPosition(Gdx.graphics.getWidth() / 2f - exitToMenu.getWidth() / 2f,
-                               Gdx.graphics.getHeight() / 2f - exitToMenu.getHeight() / 2f);
+                               Gdx.graphics.getHeight() / 2f - exitToMenu.getHeight() / 2f + 30);
         stage.addActor(exitToMenu);
+
+        // Add the Save Game button
+        TextButton saveGame = createMenuButton("Save Game", "Saves game in executable folder",
+            "Saving Game Fen", sm::saveGame);
+        saveGame.setPosition(Gdx.graphics.getWidth() / 2f - saveGame.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2f - saveGame.getHeight() / 2f - 30);
+        stage.addActor(saveGame);
 
         // Add the exit application button
         TextButton exitApp = createMenuButton("Exit App", "Fully closes the app",
                                             "Exiting App", Gdx.app::exit);
         exitApp.setPosition(Gdx.graphics.getWidth() / 2f - exitApp.getWidth() / 2f,
-                            Gdx.graphics.getHeight() / 2f - exitApp.getHeight() / 2f - 60);
+                            Gdx.graphics.getHeight() / 2f - exitApp.getHeight() / 2f - 90);
         stage.addActor(exitApp);
 
         stage.addListener(new InputListener() {

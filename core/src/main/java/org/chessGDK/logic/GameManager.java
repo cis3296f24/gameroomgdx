@@ -3,6 +3,7 @@ package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Timer;
@@ -109,7 +110,7 @@ public class GameManager extends ScreenAdapter {
     }
 
     private void gameLoop () {
-        if(puzzleMode)
+        if(whiteTurn != playerColor)
             aiTurn();
         while (!gameOver) {
             try {
@@ -533,6 +534,18 @@ public class GameManager extends ScreenAdapter {
     public void render(float delta) {
         super.render(delta);
 
+    }
+
+    public void saveGame() {
+        String gameFen = getFenFromAI();
+        FileHandle file = Gdx.files.local("game_save.txt");
+        try {
+            // Write the gameFen string to the file
+            file.writeString(gameFen, false);  // 'false' means overwrite, 'true' would append to the file
+            System.out.println("Game saved successfully to " + file.file().getAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("Error saving game: " + e.getMessage());
+        }
     }
 
     public void exitGame() {

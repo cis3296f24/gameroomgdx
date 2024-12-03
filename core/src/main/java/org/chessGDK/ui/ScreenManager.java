@@ -1,6 +1,8 @@
 package org.chessGDK.ui;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import org.chessGDK.logic.GameManager;
 
 import java.io.IOException;
@@ -145,7 +147,12 @@ public class ScreenManager extends Game {
     // Add other methods to manage game state, screens, etc.
     public void loadSaveState() {
         try {
-            String fen = "r1bqkbnr/ppp2ppp/2n5/3pp3/6P1/3P1P2/PPP1P2P/RNBQKBNR w KQkq - 1 4";
+            String fen = "position startpos";
+            FileHandle file;
+            if (Gdx.files.local("game_save.txt").exists()) {
+                file = Gdx.files.local("game_save.txt");
+                fen = file.readString();
+            }
             gm = new GameManager(difficulty, fen, HostOrClient);
             chessBoardScreen = getChessBoardScreen();
             pauseScreen = getPauseScreen();
@@ -215,6 +222,10 @@ public class ScreenManager extends Game {
     public void showBoard(){
         System.out.println("Showing Board");
         this.setScreen(getChessBoardScreen());
+    }
+
+    public void saveGame() {
+        gm.saveGame();
     }
 
     public void pauseGame() {
