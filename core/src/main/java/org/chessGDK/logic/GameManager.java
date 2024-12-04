@@ -16,6 +16,9 @@ import org.chessGDK.ai.StockfishAI;
 import org.chessGDK.ui.GameOverScreen;
 import org.chessGDK.ui.ScreenManager;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Queue;
@@ -544,13 +547,32 @@ public class GameManager extends ScreenAdapter {
     // Saves the game state by writing the FEN to a file in the games CWD
     public void saveGame() {
         String gameFen = getFenFromAI();
-        FileHandle file = Gdx.files.local("game_save.txt");
-        try {
-            // Write the gameFen string to the file
-            file.writeString(gameFen, false); // Overwrites prior save
-            System.out.println("Game saved successfully to " + file.file().getAbsolutePath());
-        } catch (Exception e) {
-            System.err.println("Error saving game: " + e.getMessage());
+                //create saves folder if it does not exist
+        File folder = new File("saves");
+        if(!folder.exists()){
+            folder.mkdirs();
+        }
+        File[] list = folder.listFiles();
+        String path = "saves/"+list.length;
+        File f = new File(path);
+        if(f.exists()){
+            if(!f.delete()){
+                System.out.println("Save Failed");
+            }
+        }
+        else{
+            System.out.println(path);
+            try {
+                if(f.createNewFile()){
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+                        writer.write(gameFen);
+                    } catch (IOException e) {
+                        System.err.println("Error writing to file: " + e.getMessage());
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
