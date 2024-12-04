@@ -1,6 +1,5 @@
 package org.chessGDK.ui;
 
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 
 import org.chessGDK.logic.GameManager;
@@ -43,7 +42,7 @@ public class ChessBoardScreen implements Screen {
     }
 
     public void loadTextures(GameManager gm) {
-        boardTexture = new Texture("brown.png");
+        boardTexture = new Texture("blue3.jpg");
         board = gm.getBoard();
         possibilities = gm.getPossibilities();
         inputHandler = new PieceInputHandler(this, gm, camera, board, possibilities, TILE_SIZE);

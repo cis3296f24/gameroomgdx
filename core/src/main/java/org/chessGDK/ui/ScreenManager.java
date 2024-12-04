@@ -1,17 +1,8 @@
 package org.chessGDK.ui;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 import org.chessGDK.logic.GameManager;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.stream.Stream;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 
@@ -34,8 +25,6 @@ public class ScreenManager extends Game {
     private boolean paused = false;
     private puzzleFENs puzzle = new puzzleFENs();
     private String savedFEN = START_FEN;
-
-
 
     // Variable for AI difficulty level
     private int difficulty = 0;

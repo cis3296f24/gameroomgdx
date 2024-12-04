@@ -1,17 +1,16 @@
 package org.chessGDK.ui;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import org.chessGDK.logic.GameManager;
 import org.chessGDK.pieces.Blank;
 import org.chessGDK.pieces.Pawn;
 import org.chessGDK.pieces.Piece;
-
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import org.chessGDK.utils.CoordinateUtils;
 
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.Texture;
 
 import java.io.IOException;
@@ -233,7 +232,10 @@ public class PieceInputHandler extends InputAdapter {
                 int col = string.charAt(2) - 'a';
                 int row = string.charAt(3) - '1';
                 Blank temp = possibilities[row][col];
-                temp.setTexture(new Texture("green.png"));
+                if (board[row][col] != null)
+                    temp.setTexture(new Texture("red_25_alpha.png"));
+                else
+                    temp.setTexture(new Texture("green_25_alpha.png"));
             }
         }
     }

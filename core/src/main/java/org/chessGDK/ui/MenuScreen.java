@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.stream.Stream;
 
 public class MenuScreen implements Screen {
@@ -30,15 +29,16 @@ public class MenuScreen implements Screen {
     private static final int BUTTON_WIDTH = 250;
     private static final int BUTTON_HEIGHT = 60;
     private static final float FONT_SCALE = 1.5f;
-    private static final Color BUTTON_COLOR = new Color(0.3f, 0.2f, 0.1f, 1); // Brown for chess theme
-    private static final Color HOVER_COLOR = new Color(0.4f, 0.3f, 0.2f, 1);  // Lighter brown on hover
+    private static final Color BUTTON_COLOR = new Color(0.2f, 0.6f, 1f, 1); // Light blue
+    private static final Color HOVER_COLOR = new Color(0.3f, 0.7f, 1f, 1);  // Slightly lighter blue on hover
 
     // Fields
     private final ScreenManager screenManager;
     private final Stage stage;
     private final Skin skin;
-    private SelectBox<String> selectBox;
-    private SelectBox<String> HOCselectBox;
+    private SelectBox<String> diffSelectBox;
+    private SelectBox<String> HOCSelectBox;
+    private SelectBox<String> saveSelectBox;
     private Label tooltipLabel;
     private String difficultyText;
 
@@ -129,13 +129,13 @@ public class MenuScreen implements Screen {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        selectBox = new SelectBox<>(skin);
-        selectBox.setItems(arr);
+        saveSelectBox = new SelectBox<>(skin);
+        saveSelectBox.setItems(arr);
 
-        selectBox.addListener(new ChangeListener() {
+        saveSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                String selected = selectBox.getSelected();
+                String selected = saveSelectBox.getSelected();
                 System.out.println(selected);
                 try (BufferedReader br = new BufferedReader(new FileReader("saves/"+selected))) {
                     String line;
@@ -148,19 +148,19 @@ public class MenuScreen implements Screen {
             }
         });
 
-        table.add(selectBox).padBottom(15);
+        table.add(saveSelectBox).padBottom(15);
         table.row();
     }
 
     // Create Difficulty SelectBox
     private void createDifficultySelectBox(Table table) {
-        selectBox = new SelectBox<>(skin);
-        selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
+        diffSelectBox = new SelectBox<>(skin);
+        diffSelectBox.setItems("Novice", "Intermediate", "Expert", "Master");
 
-        selectBox.addListener(new ChangeListener() {
+        diffSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                String selectedLevel = selectBox.getSelected();
+                String selectedLevel = diffSelectBox.getSelected();
                 int difficulty;
 
                 switch (selectedLevel) {
@@ -188,20 +188,20 @@ public class MenuScreen implements Screen {
                 System.out.println(difficultyText);
             }
         });
-        selectBox.getList().addListener(new InputListener() {
+        diffSelectBox.getList().addListener(new InputListener() {
             @Override
             public boolean mouseMoved(InputEvent event, float x, float y) {
-                int index = selectBox.getList().getSelectedIndex();
+                int index = diffSelectBox.getList().getSelectedIndex();
                 if (index != -1) {
                     // Get the stage coordinates of the list
-                    Vector2 listPosition = selectBox.getList().localToStageCoordinates(new Vector2(0, 0));
+                    Vector2 listPosition = diffSelectBox.getList().localToStageCoordinates(new Vector2(0, 0));
 
                     // Calculate the Y-coordinate of the selected item
-                    float itemHeight = selectBox.getList().getItemHeight();
-                    float selectedItemY = listPosition.y + selectBox.getList().getHeight() - (index + 1) * itemHeight;
+                    float itemHeight = diffSelectBox.getList().getItemHeight();
+                    float selectedItemY = listPosition.y + diffSelectBox.getList().getHeight() - (index + 1) * itemHeight;
 
                     // Set the tooltip position to the right of the selected item
-                    tooltipLabel.setPosition(listPosition.x + selectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
+                    tooltipLabel.setPosition(listPosition.x + diffSelectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
                     switch(index) {
                         case 0:
                             tooltipLabel.setText("Play against an AI with an ELO rating of 800");
@@ -224,19 +224,19 @@ public class MenuScreen implements Screen {
                 return super.mouseMoved(event, x, y);
             }
         });
-        table.add(selectBox).padBottom(15);
+        table.add(diffSelectBox).padBottom(15);
         table.row();
     }
 
     // Create Host or Client SelectBox
     private void createHOCSelectBox(Table table) {
-        HOCselectBox = new SelectBox<>(skin);
-        HOCselectBox.setItems("Host", "Client");
+        HOCSelectBox = new SelectBox<>(skin);
+        HOCSelectBox.setItems("Host", "Client");
 
-        HOCselectBox.addListener(new ChangeListener() {
+        HOCSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                String selected = HOCselectBox.getSelected();
+                String selected = HOCSelectBox.getSelected();
 
                 if ("Host".equals(selected)) {
                     screenManager.setHostOrClient("Host");
@@ -247,20 +247,20 @@ public class MenuScreen implements Screen {
                 }
             }
         });
-        HOCselectBox.getList().addListener(new InputListener() {
+        HOCSelectBox.getList().addListener(new InputListener() {
             @Override
             public boolean mouseMoved(InputEvent event, float x, float y) {
-                int index = HOCselectBox.getList().getSelectedIndex();
+                int index = HOCSelectBox.getList().getSelectedIndex();
                 if (index != -1) {
                     // Get the stage coordinates of the list
-                    Vector2 listPosition = HOCselectBox.getList().localToStageCoordinates(new Vector2(0, 0));
+                    Vector2 listPosition = HOCSelectBox.getList().localToStageCoordinates(new Vector2(0, 0));
 
                     // Calculate the Y-coordinate of the selected item
-                    float itemHeight = HOCselectBox.getList().getItemHeight();
-                    float selectedItemY = listPosition.y + HOCselectBox.getList().getHeight() - (index + 1) * itemHeight;
+                    float itemHeight = HOCSelectBox.getList().getItemHeight();
+                    float selectedItemY = listPosition.y + HOCSelectBox.getList().getHeight() - (index + 1) * itemHeight;
 
                     // Set the tooltip position to the right of the selected item
-                    tooltipLabel.setPosition(listPosition.x + HOCselectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
+                    tooltipLabel.setPosition(listPosition.x + HOCSelectBox.getList().getWidth() + 10, selectedItemY + itemHeight / 2);
                     switch(index) {
                         case 0:
                             tooltipLabel.setText("Host a server for client");
@@ -276,7 +276,7 @@ public class MenuScreen implements Screen {
             }
         });
 
-        table.add(HOCselectBox).padBottom(15);
+        table.add(HOCSelectBox).padBottom(15);
         table.row();
     }
 

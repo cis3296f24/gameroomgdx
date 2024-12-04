@@ -22,8 +22,8 @@ public class PauseScreen implements Screen{
     private static final int BUTTON_WIDTH = 250;
     private static final int BUTTON_HEIGHT = 60;
     private static final float FONT_SCALE = 1.5f;
-    private static final Color BUTTON_COLOR = new Color(0.3f, 0.2f, 0.1f, 1); // Brown for chess theme
-    private static final Color HOVER_COLOR = new Color(0.4f, 0.3f, 0.2f, 1);  // Lighter brown on hover
+    private static final Color BUTTON_COLOR = new Color(0.2f, 0.6f, 1f, 1); // Light blue
+    private static final Color HOVER_COLOR = new Color(0.3f, 0.7f, 1f, 1);  // Slightly lighter blue on hover
     private Label tooltipLabel;
 
     private Stage stage;

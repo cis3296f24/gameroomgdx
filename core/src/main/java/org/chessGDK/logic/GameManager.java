@@ -3,7 +3,6 @@ package org.chessGDK.logic;
 
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Timer;
@@ -114,7 +113,7 @@ public class GameManager extends ScreenAdapter {
 
     private void gameLoop () {
         // Handles starting puzzles and loading from save states
-        if(whiteTurn != playerColor)
+        if(whiteTurn != playerColor && !multiplayerMode)
             aiTurn();
         while (!gameOver) {
             try {
@@ -366,66 +365,52 @@ public class GameManager extends ScreenAdapter {
         return parsed;
     }
 
-    private void promote(char rank, int endRow, int endCol) {
-        int tileSize;
-        int targetX;
-        int targetY;
-        Piece piece;
+    private void promote(char rank, int row, int col) {
+        Piece oldPiece;
+        Piece newPiece;
         switch (rank) {
             case 'q':
-                piece = board[endRow][endCol];
-                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
-                targetX = endCol * tileSize;
-                targetY = endRow * tileSize;
-                board[endRow][endCol] = new Queen(piece.isWhite());
-                board[endRow][endCol].setPosition(targetX,targetY);
-                board[endRow][endCol].setWidth(piece.getWidth());
-                board[endRow][endCol].setHeight(piece.getHeight());
-                board[endRow][endCol].setVisible(true);
-                piece.getStage().addActor(board[endRow][endCol]);
-                piece.remove();
+                oldPiece = board[row][col];
+                newPiece = new Queen(oldPiece.isWhite());
+                changePiece(row, col, oldPiece, newPiece);
                 return;
             case 'r':
-                piece = board[endRow][endCol];
-                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
-                targetX = endCol * tileSize;
-                targetY = endRow * tileSize;
-                board[endRow][endCol] = new Rook(piece.isWhite());
-                board[endRow][endCol].setPosition(targetX,targetY);
-                board[endRow][endCol].setWidth(piece.getWidth());
-                board[endRow][endCol].setHeight(piece.getHeight());
-                board[endRow][endCol].setVisible(true);
-                piece.getStage().addActor(board[endRow][endCol]);
-                piece.remove();
+                oldPiece = board[row][col];
+                newPiece = new Rook(oldPiece.isWhite());
+                changePiece(row, col, oldPiece, newPiece);
                 return;
             case 'b':
-                piece = board[endRow][endCol];
-                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
-                targetX = endCol * tileSize;
-                targetY = endRow * tileSize;
-                board[endRow][endCol] = new Bishop(piece.isWhite());
-                board[endRow][endCol].setPosition(targetX,targetY);
-                board[endRow][endCol].setWidth(piece.getWidth());
-                board[endRow][endCol].setHeight(piece.getHeight());
-                board[endRow][endCol].setVisible(true);
-                piece.getStage().addActor(board[endRow][endCol]);
-                piece.remove();
+                oldPiece = board[row][col];
+                newPiece = new Bishop(oldPiece.isWhite());
+                changePiece(row, col, oldPiece, newPiece);
                 return;
             case 'n':
-                piece = board[endRow][endCol];
-                tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
-                targetX = endCol * tileSize;
-                targetY = endRow * tileSize;
-                board[endRow][endCol] = new Knight(piece.isWhite());
-                board[endRow][endCol].setPosition(targetX,targetY);
-                board[endRow][endCol].setWidth(piece.getWidth());
-                board[endRow][endCol].setHeight(piece.getHeight());
-                board[endRow][endCol].setVisible(true);
-                piece.getStage().addActor(board[endRow][endCol]);
-                piece.remove();
+                oldPiece = board[row][col];
+                newPiece = new Knight(oldPiece.isWhite());
+                changePiece(row, col, oldPiece, newPiece);
                 return;
             default:
         }
+    }
+
+    private void changePiece(int row, int col, Piece op, Piece np) {
+        int targetY;
+        int targetX;
+        int tileSize;
+
+        tileSize = Math.min(Gdx.graphics.getHeight(), Gdx.graphics.getWidth()) / 8;
+        targetX = col * tileSize;
+        targetY = row * tileSize;
+
+        np.setPosition(targetX,targetY);
+        np.setWidth(op.getWidth());
+        np.setHeight(op.getHeight());
+        np.setVisible(true);
+
+        op.getStage().addActor(np);
+        op.remove();
+
+        board[row][col] = np;
     }
 
     public void sendPosToStockfish(String fen) {
@@ -553,7 +538,7 @@ public class GameManager extends ScreenAdapter {
             folder.mkdirs();
         }
         File[] list = folder.listFiles();
-        String path = "saves/"+list.length;
+        String path = "saves/game "+ (list.length + 1);
         File f = new File(path);
         if(f.exists()){
             if(!f.delete()){
