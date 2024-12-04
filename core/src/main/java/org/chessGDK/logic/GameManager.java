@@ -111,7 +111,7 @@ public class GameManager extends ScreenAdapter {
 
     private void gameLoop () {
         // Handles starting puzzles and loading from save states
-        if(whiteTurn != playerColor)
+        if(whiteTurn != playerColor && !multiplayerMode)
             aiTurn();
         while (!gameOver) {
             try {
