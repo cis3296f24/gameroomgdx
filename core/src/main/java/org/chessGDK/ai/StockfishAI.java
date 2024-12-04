@@ -10,6 +10,7 @@ import java.util.jar.Manifest;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
+
 public class StockfishAI {
     private final Process stockfishProcess;
     private final BufferedReader input;
@@ -18,6 +19,7 @@ public class StockfishAI {
     private int difficulty = 0;
     private String FEN;
     private List<String> returnList;
+
 
     public StockfishAI(int depth, int difficulty, String fen) throws IOException {
         String path = System.getProperty("assets.path");
@@ -64,7 +66,6 @@ public class StockfishAI {
         return path;
     }
 
-    // Send a command to Stockfish will add newline before sending
     private boolean sendCommand(String command) {
         returnList.clear();
         //System.out.println("Command sent: " + command);
@@ -82,6 +83,10 @@ public class StockfishAI {
         //System.out.println("command sent :" + command);
     }
 
+    /**
+     * The method reads a line of response from Stockfish.
+     * @return
+     */
     private String getLine() {
         String line = null;
         try {
