@@ -28,33 +28,66 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
+/**
+ * The GameManager class handles the logic of the chess game which applies to the player vs AI mode, puzzle mode, player
+ * vs player mode, free mode. It also handles save states. It implements the game loop, piece moves, turn order, player
+ * input and board state,
+ */
 public class GameManager extends ScreenAdapter {
+    /** Queue for waiting for moves in game loop. */
     private final BlockingQueue<String> moveQueue = new LinkedBlockingQueue<>();
+    /** Thread that manages the game loop. */
     private Thread gameLoopThread;
-
+    /** Indicates whether it's white's turn. */
     private boolean whiteTurn;
+    /** Indicates the player's color (true for white, false for black). */
     private boolean playerColor;
+    /** 2D Array corresponding to a chessboard with pieces. */
     private final Piece[][] board;
+    /** 2D array representing possible moves for a piece. */
     private final Blank[][] possibilities;
+    /** AI engine for generating moves and validating game state(See stockfish AI class). */
     private final StockfishAI stockfishAI;
+    /** Indicates if playing free mode. */
     private boolean freeMode = false;
+    /** Indicates if playing puzzle mode. */
     private boolean puzzleMode = false;
+    /** Indicates if game is over. */
     public volatile boolean gameOver = false;
+    /** Indicates if playing multiplayer mode. */
     public boolean multiplayerMode = false;
+    /** Stack of moves played for move history */
     private final Stack<String> moveList;
+    /** Queue of move sequences for puzzle mode */
     private Queue<String> solutionList;
+    /** Board reprsentation in FEN format which can be used with Stockfisj */
     private String FEN;
+    /** Duration of animations for moving pieces. */
     private final float duration = .15f;
+    /** Screen displayed when game is over */
     private final GameOverScreen gameOverScreen;
+    /** Map of moves which reprsenting castling the King and Rook */
     private final HashMap<String, String> castleMoves;
+    /** String of all legal moves in the current position. */
     private String legalMoves;
+    /** Handles network communication for multiplayer games. (See communication class) */
     private Communication communication;
+    /** Indicates if player is the host in multiplayer mode*/
     private boolean isHost;
+    /** Best move suggested from Stockfish. */
     private String[] bestMove;
+    /** Sound when a piece successfully moves. */
     private final Sound moveSound;
+    /** Sound when a piece gets captured. */
     private final Sound killSound;
-
+    /**
+     * Constructor for the GameManager with specified difficulty, board state, and multiplayer role.
+     *
+     * @param difficulty  the difficulty level (-1 for free mode, -2 for puzzle mode,
+     *                    -3 for multiplayer, otherwise AI difficulty level)
+     * @param fen         the initial board state in FEN format
+     * @param HostOrClient specifies "Host" or "Client" role for multiplayer
+     */
     public GameManager(int difficulty, String fen, String HostOrClient) throws IOException {
 
         board = new Piece[8][8];
@@ -98,13 +131,20 @@ public class GameManager extends ScreenAdapter {
         killSound = Gdx.audio.newSound(Gdx.files.internal("kill.mp3"));
 
     }
-
+    /**
+     * Initializes the puzzle solution list.
+     *
+     * @param solutions the solution sequence as a string
+     */
     private void setupSolutions(String solutions) {
         solutionList = new ArrayDeque<>();
         solutions = solutions.replace("\n", "");
         solutionList.addAll(Arrays.asList(solutions.split(",")));
     }
-
+    /**
+     * Starts gameloop function in a new thread.
+     *
+     */
     public void startGameLoopThread() {
         gameLoopThread = new Thread(this::gameLoop) {{
             setDaemon(true);
@@ -112,6 +152,9 @@ public class GameManager extends ScreenAdapter {
         gameLoopThread.start();
     }
 
+    /**
+     *  Loop that handles turn order, updates the game state, starts puzzles and loading from savestates.
+     */
     private void gameLoop () {
         // Handles starting puzzles and loading from save states
         if(whiteTurn != playerColor)
@@ -138,6 +181,9 @@ public class GameManager extends ScreenAdapter {
         System.out.printf("Game over: %s - %s\n",gameOver, Thread.currentThread().getName());
     }
 
+    /**
+     * Updates the board by getting new legal moves and it also checks puzzle completion in puzzle mode
+     */
     private void updateBoardState() {
         String toStock = appendLastMove(FEN);
         sendPosToStockfish(toStock);
@@ -168,6 +214,9 @@ public class GameManager extends ScreenAdapter {
         }
     }
 
+    /**
+     * Toggles the turn between players based on the mode.
+     */
     public void toggleTurn() {
         whiteTurn = !whiteTurn;
         if (freeMode)
@@ -181,13 +230,18 @@ public class GameManager extends ScreenAdapter {
             normalTurns();
     }
 
+    /**
+     * Handles turns for Player vs AI mode
+     */
     private void normalTurns() {
         if (whiteTurn == playerColor)
             playerTurn();
         else
             aiTurn();
     }
-
+    /**
+     * Handles turns for Player vs Player mode
+     */
     private void multiplayerTurns() {
         if((isHost && whiteTurn) || (!isHost && !whiteTurn)){
             playerTurn();
@@ -199,7 +253,9 @@ public class GameManager extends ScreenAdapter {
     private void playerTurn() {
         System.out.println("Player's turn");
     }
-
+    /**
+     * Executes the AI's turn in game and handles AI move in puzzles.
+     */
     public void aiTurn() {
         System.out.println("AI's turn");
         Timer.schedule(new Timer.Task() {
@@ -213,18 +269,27 @@ public class GameManager extends ScreenAdapter {
         }, .1f); // Delay by .5 second
     }
 
+    /**
+     * see method in StockFishAI class
+     */
     public String[] getBestMove() throws IOException{
         return stockfishAI.getBestMove();
     }
-
+    /**
+     * see method in StockFishAI class
+     */
     public String getLegalMoves() throws IOException {
         return stockfishAI.getLegalMoves();
     }
-
+    /**
+     * see method in StockFishAI class
+     */
     public String getFenFromAI() {
         return stockfishAI.getFEN();
     }
-
+    /**
+     * Checks whether the current game state is a checkmate.
+     */
     private void checkforcheckmate() {
         try {
             //System.out.println("FEN after move: " + fen + "\nStockfish's Best Move: " + bestMove);
@@ -243,7 +308,10 @@ public class GameManager extends ScreenAdapter {
             e.printStackTrace();
         }
     }
-
+    /**
+     * Checks whether move is legal with Stockfish or if the move is incorrect in puzzle mode.
+     *  @param move move to be checked if legal
+     */
     public boolean isLegalMove(String move) {
         if(!puzzleMode && !stockfishAI.parseLegalMoves(move, legalMoves)){
             System.out.println("Illegal move");
@@ -257,11 +325,19 @@ public class GameManager extends ScreenAdapter {
         }
         return true;
     }
-
+    /**
+     * Adds a move to the move queue for processing.
+     *
+     * @param move the move string to queue
+     */
     public void queueMove(String move) {
         moveQueue.add(move);
     }
-
+    /**
+     * Executes a move on the board; it identifies where the piece that wants to be moved is and its destination square
+     * and ensures it can be played. It also handles castling, manages puzzle conditons, move animations and sound
+     * @param move the move to be played
+     */
     public void movePiece(String move) {
         if (move.isEmpty())
             return;
@@ -327,6 +403,10 @@ public class GameManager extends ScreenAdapter {
     }
 
     //King : "e1c1 e1g1 e8c8 e8g8", Rook: "a1d1 h1f1 a8d8 h8f8"
+    /**
+     * Allows castling to be played by moving the rook to its castling square
+     * @param move the move to be played
+     */
     private void handleCastling(String move) {
         if (!castleMoves.containsKey(move))
             return;
@@ -349,7 +429,12 @@ public class GameManager extends ScreenAdapter {
         char[] temp = parseMove(move);
         board[temp[2]][temp[3]].setPosition(temp[0], temp[1]);
     }
-
+    /**
+     * Translates the string move into zero based indices which are used with the internal board
+     * @param move the move to be played
+     * @return A parsed char array where parsed[0] and parsed[1] are the starting column and row and
+     * parsed[2] and parsed[3] are the ending column and row.
+     */
     private static char[] parseMove(String move) {
         if (move == null) {
             return null;
@@ -365,7 +450,13 @@ public class GameManager extends ScreenAdapter {
         parsed[3] -= '1';
         return parsed;
     }
-
+    /**
+     * Promotes a pawn to a specified piece.
+     *
+     * @param rank  the rank to promote to ('q', 'r', 'b', 'n')
+     * @param endRow the row of the promotion square
+     * @param endCol the column of the promotion square
+     */
     private void promote(char rank, int endRow, int endCol) {
         int tileSize;
         int targetX;
@@ -432,7 +523,12 @@ public class GameManager extends ScreenAdapter {
         System.out.println(fen);
         stockfishAI.sendPosition(fen);
     }
-
+    /**
+     * Takes last move and adds it to the end of the fen
+     *
+     * @param fen String representation of board state
+     * @return a string with the fen of the current board and the last move
+     */
     private String appendLastMove(String fen) {
         StringBuilder fenWithMove = new StringBuilder();
         fenWithMove.append(fen);
@@ -443,7 +539,12 @@ public class GameManager extends ScreenAdapter {
         }
         return fenWithMove.toString();
     }
-
+    /**
+     * convert a string representation of a piece into an actual Piece object to help turns fen String into an actual board
+     *
+     * @param p String to reprsent the piece
+     * @return temp Piece object for game
+     */
     public Piece getPieceFromString(String p){
         Piece temp = null;
         if(p.equalsIgnoreCase("P")){
@@ -467,7 +568,11 @@ public class GameManager extends ScreenAdapter {
         }
         return temp;
     }
-
+    /**
+     * Goes through the fen string and creates a board based on the fen
+     *
+     * @param fen String representation of board statee
+     */
     public void parseFen(String fen){
         for (Piece[] pieces : board) {
             Arrays.fill(pieces, null);
@@ -522,6 +627,10 @@ public class GameManager extends ScreenAdapter {
         return possibilities;
     }
 
+    /**
+     * Prints internal reprsentation of the board which is a two dimensional array
+     *
+     */
     public void printBoard() {
         for (int row = 7; row >= 0; row--) {
             System.out.print((row + 1) + " ");
@@ -544,6 +653,10 @@ public class GameManager extends ScreenAdapter {
 
     }
 
+
+    /**
+     *  Saves the game state by writing the FEN to a file in the games CWD.
+     */
     // Saves the game state by writing the FEN to a file in the games CWD
     public void saveGame() {
         String gameFen = getFenFromAI();
@@ -575,7 +688,9 @@ public class GameManager extends ScreenAdapter {
             }
         }
     }
-
+    /**
+     * Cleans up resources such as stockfish and gameloop and exits the game.
+     */
     public void exitGame() {
         if (moveSound != null) {
             moveSound.dispose(); // Added here

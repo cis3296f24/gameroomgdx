@@ -4,10 +4,19 @@ import java.util.Random;
 
 //Store all fen strings here
 //choosing randomly
-public class puzzleFENs {
-    private String[] fenArray;
-    private Random random;
+/**
+ * Stores all the fen strings used in puzzle mode
+ */
 
+public class puzzleFENs {
+    /** Array of fen strings and move order solutions.*/
+    private String[] fenArray;
+    /** random variable for puzzle selection*/
+    private Random random;
+    /**
+     * Constructor for puzzle fens sourced from Lichess which adds fens to fenArray.
+     *
+     */
     // puzzles sourced from Lichess
     public puzzleFENs(){
         fenArray = new String[]{
@@ -19,7 +28,11 @@ public class puzzleFENs {
                 "4r3/5pk1/1p3np1/3p3p/2qQ4/P4N1P/1P3RP1/7K w - - 6 34\td4b6 f6e4 h1g1 e4f2\n"
         };
     }
-
+    /**
+     * Randomly selects a fen and solution from fenArray
+     *
+     * @return random puzzle from fen array
+     */
     public String getRandomPuzzle(){
         random = new Random();
         int index = random.nextInt(fenArray.length);

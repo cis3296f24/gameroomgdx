@@ -23,7 +23,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.stream.Stream;
-
+/**
+ * Represents the menu screen which is the first screen shown in the application and is
+ * used to select different modes in the application.
+ */
 public class MenuScreen implements Screen {
 
     // Constants
@@ -34,15 +37,28 @@ public class MenuScreen implements Screen {
     private static final Color HOVER_COLOR = new Color(0.4f, 0.3f, 0.2f, 1);  // Lighter brown on hover
 
     // Fields
+    /** Navigates between screens.*/
     private final ScreenManager screenManager;
+    /** Stage for holding UI components.*/
     private final Stage stage;
+    /** Skin for UI styling.*/
     private final Skin skin;
+    /** Dropdown for selecting difficulty or saved games.*/
     private SelectBox<String> selectBox;
+    /** Dropdown for selecting "Host" or "Client" in multiplayer mode.*/
     private SelectBox<String> HOCselectBox;
+    /** Label for displaying tooltips for buttons and dropdown options.*/
     private Label tooltipLabel;
+    /** Feedback text for the selected difficulty level.*/
     private String difficultyText;
 
+
     // Constructor
+
+    /**
+     * Constructor for MenuScreen.
+     * Initializes the stage, skin, and sets up the input processor for the menu screen.
+     */
     public MenuScreen() {
         this.screenManager = ScreenManager.getInstance();
         this.stage = new Stage(new ScreenViewport());
@@ -52,6 +68,10 @@ public class MenuScreen implements Screen {
     }
 
     // Create all menu buttons and UI components
+
+    /**
+     * Creates the buttons and UI components displayed in the menu screen.
+     */
     private void createMenuButtons() {
         Table table = new Table();
         table.setFillParent(true);
@@ -110,6 +130,12 @@ public class MenuScreen implements Screen {
                 .width(BUTTON_WIDTH).height(BUTTON_HEIGHT).padBottom(15);
     }
     //Create saved games select box
+
+    /**
+     * Creates a dropdown to select saved games from a directory and loads the selected save.
+     *
+     * @param table The table to which the dropdown will be added.
+     */
     private void createSavesSelectBox(Table table){
         File folder = new File("saves");
         if(!folder.exists()){
@@ -153,6 +179,11 @@ public class MenuScreen implements Screen {
     }
 
     // Create Difficulty SelectBox
+    /**
+     * Creates a dropdown to select stockfish ai difficulty based on elo.
+     *
+     * @param table The table to which the dropdown will be added.
+     */
     private void createDifficultySelectBox(Table table) {
         selectBox = new SelectBox<>(skin);
         selectBox.setItems("Novice", "Intermediate", "Expert", "Master");
@@ -229,6 +260,11 @@ public class MenuScreen implements Screen {
     }
 
     // Create Host or Client SelectBox
+    /**
+     * Creates a dropdown to select host or client in multiplayer.
+     *
+     * @param table The table to which the dropdown will be added.
+     */
     private void createHOCSelectBox(Table table) {
         HOCselectBox = new SelectBox<>(skin);
         HOCselectBox.setItems("Host", "Client");
@@ -281,6 +317,15 @@ public class MenuScreen implements Screen {
     }
 
     // Create a menu button
+    /**
+     * Creates a menu button with specified text, tooltip, and action.
+     * The button displays a tooltip on hover and performs the provided action when clicked.
+     *
+     * @param text       the text to display on the button
+     * @param tooltipText the text to display as a tooltip when the button is hovered over
+     * @param action      a Runnable representing the action to execute when the button is clicked
+     * @return a TextButton object
+     */
     private TextButton createMenuButton(String text, String tooltipText, Runnable action) {
         TextButton button = new TextButton(text, skin);
         button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -311,6 +356,11 @@ public class MenuScreen implements Screen {
     }
 
     // Position tooltip intelligently
+    /**
+     * Positions the tooltip near each button in the menu
+     *
+     * @param actor the Actor near which the tooltip should be positioned
+     */
     private void positionTooltip(Actor actor) {
         float tooltipX = actor.getX() + actor.getWidth() + 10;
         float tooltipY = actor.getY() + actor.getHeight() / 2;

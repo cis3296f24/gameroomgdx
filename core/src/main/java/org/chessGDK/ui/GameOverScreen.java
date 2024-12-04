@@ -13,11 +13,21 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
+/**
+ * Represents the a game over screen which appears when the checkmate is made or a puzzle is solved. The player can
+ * choose to reset the game, see the board or exit to menu
+ */
 public class GameOverScreen implements Screen {
+    /** Stage for holding UI components.*/
     private Stage stage;
+    /** The Skin used for styling UI components.*/
     private Skin skin;
+    /** Navigates between screens.*/
     private ScreenManager sm;
-
+    /**
+     * Constructor for Game Over screen.
+     * Initializes the stage, skin, and sets up the input processor for the screen.
+     */
     public GameOverScreen() {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -28,6 +38,9 @@ public class GameOverScreen implements Screen {
         addListeners();
         addTitle();
     }
+    /**
+     * adds Game Over title
+     */
     private void addTitle() {
          //add Label for the title
         Label titleLabel = new Label("Game Over", skin);
@@ -43,6 +56,9 @@ public class GameOverScreen implements Screen {
         // Add the label to the stage
         stage.addActor(titleLabel);
     }
+    /**
+     * adds different buttons for menu.
+     */
     private void addListeners() {
         // Add the play button
         TextButton playButton = new TextButton("Play Again?", skin);

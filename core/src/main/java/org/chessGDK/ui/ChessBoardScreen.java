@@ -18,19 +18,35 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 
 
-/** First screen of the application. Displayed after the application is created. */
+
+/**
+ * Represents the main screen for displaying and interacting with the chessboard in the game.
+ * This class handles the rendering of the chessboard, pieces, and possible move indicators,
+ * as well as user input processing and stage management.
+ */
 public class ChessBoardScreen implements Screen {
+    /** The SpriteBatch used for drawing textures and game elements.*/
     private final SpriteBatch batch;
-
+    /** The texture used to render the chessboard background.*/
     private Texture boardTexture;
+    /** The size of a single tile on the chessboard*/
     private static int TILE_SIZE = Gdx.graphics.getWidth()/8;
+    /**  TThe 2D array representing the current state of the chessboard pieces .*/
     private Piece[][] board;
+    /**  The 2D array representing possible moves as graphical indicators on the board */
     private Blank[][] possibilities;
+    /** The Stage used for managing and drawing UI elements and actors.*/
     public Stage stage;
+    /** The Skin used for styling UI components.*/
     public Skin skin;
+    /** The input handler that processes user interactions with the chessboard.*/
     private PieceInputHandler inputHandler;
+    /** The orthographic camera for managing the viewport and rendering perspective.*/
     private final OrthographicCamera camera;
-
+    /**
+     * Constructor for the `ChessBoardScreen` class.
+     * Initializes the rendering components, stage, camera, and skin for the chessboard screen.
+     */
     public ChessBoardScreen() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera(); // Initialize the camera
@@ -42,6 +58,11 @@ public class ChessBoardScreen implements Screen {
 
     }
 
+    /**
+     * Loads the textures and initializes the chessboard and prepares the board's for rendering.
+     *
+     * @param gm the GameManager that provides the chessboard state and logic.
+     */
     public void loadTextures(GameManager gm) {
         boardTexture = new Texture("brown.png");
         board = gm.getBoard();
@@ -63,7 +84,10 @@ public class ChessBoardScreen implements Screen {
             }
         }
     }
-
+    /**
+     * Renders the chessboard and its elements which is called continuously in the game loop.
+     * @param delta the time elapsed since the last frame, in seconds.
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(1, 1, 1, 1); // Clear to white
@@ -91,7 +115,9 @@ public class ChessBoardScreen implements Screen {
             }
         }
     }
-
+    /**
+     * Disposes resources associated with the screen, such as textures
+     */
     @Override
     public void dispose() {
         stage.dispose();
@@ -105,7 +131,12 @@ public class ChessBoardScreen implements Screen {
     public void show() {
         Gdx.input.setInputProcessor(inputHandler);
     }
-
+    /**
+     * Handles resizing of the screen. Updates the viewport and recalculates tile size.
+     *
+     * @param width  the new width of the screen.
+     * @param height the new height of the screen.
+     */
     @Override
     public void resize(int width, int height) {
         // Resize your screen here. The parameters represent the new window size.

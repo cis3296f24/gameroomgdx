@@ -11,13 +11,27 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.io.IOException;
-
+/**
+ * Handles communication between players in a multiplayer chess game using java sockets.
+ * Can function as either a server or a client, depending on the specified mode.
+ */
 public class Communication {
+    /** The game manager handling the state and logic of the chess game. */
     private GameManager gameManager;
-    private boolean isServer;
-    private WebSocketServer server;
-    private WebSocketClient client;
 
+    /**
+     Indicates whether this instance is functioning as a server. */
+    private boolean isServer;
+    /** The WebSocket server instance used for handling client connections */
+    private WebSocketServer server;
+    /** The WebSocket client instance used for connecting to a server */
+    private WebSocketClient client;
+    /**
+     * Initializes the communication channel as a server or client based on the  isServer parameter.
+     *
+     * @param gm       the GameManager instance managing the game
+     * @param isServer true to initialize as a server, false to initialize as a client
+     */
     public Communication(GameManager gm, boolean isServer) throws IOException, URISyntaxException {
         this.gameManager = gm;
         this.isServer = isServer;
@@ -81,7 +95,11 @@ public class Communication {
             client.connect();
         }
     }
-
+    /**
+     * Sends a move to the opposing player.
+     *
+     * @param move the chess move to send as a string
+     */
     public void sendMove(String move) {
         if (isServer) {
             // Send move to all clients connected to the server
@@ -91,7 +109,9 @@ public class Communication {
             client.send(move);
         }
     }
-
+    /**
+     * Closes server, stopping the server.
+     */
     public void close() {
         if (isServer) {
             try {

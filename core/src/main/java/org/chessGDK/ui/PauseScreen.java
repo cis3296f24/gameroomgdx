@@ -16,7 +16,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-
+/**
+ * Represents the payse screen which appears when hitting esc key while in game. Player can select between resuming the
+ * game or exiting to main menu
+ */
 public class PauseScreen implements Screen{
     // Constants
     private static final int BUTTON_WIDTH = 250;
@@ -26,10 +29,16 @@ public class PauseScreen implements Screen{
     private static final Color HOVER_COLOR = new Color(0.4f, 0.3f, 0.2f, 1);  // Lighter brown on hover
     private Label tooltipLabel;
 
+    /** Stage for holding UI components.*/
     private Stage stage;
+    /** The Skin used for styling UI components.*/
     private Skin skin;
+    /** Navigates between screens.*/
     private ScreenManager sm;
-
+    /**
+     * Constructor for Pause screen.
+     * Initializes the stage, skin, and sets up the input processor for the screen.
+     */
     public PauseScreen() {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -40,7 +49,9 @@ public class PauseScreen implements Screen{
         addListeners();
         // Add the input listeners and buttons
     }
-
+    /**
+     * Adds buttons to pause menu and each event when button is clicked and implements esc key function
+     */
     private void addListeners() {
         // Add the play button
         TextButton playButton = createMenuButton("Resume", "Resumes the game",
@@ -84,7 +95,15 @@ public class PauseScreen implements Screen{
         });
         stage.addActor(tooltipLabel);
     }
-
+    /**
+     * Creates a menu button with specified text, tooltip, and action.
+     * The button displays a tooltip on hover and performs the provided action when clicked.
+     *
+     * @param text       the text to display on the button
+     * @param tooltipText the text to display as a tooltip when the button is hovered over
+     * @param action      a Runnable representing the action to execute when the button is clicked
+     * @return a TextButton object
+     */
     private TextButton createMenuButton(String text, String tooltipText,
                                         String message, Runnable action) {
         TextButton button = new TextButton(text, skin);
@@ -116,7 +135,11 @@ public class PauseScreen implements Screen{
 
         return button;
     }
-
+    /**
+     * Positions the tooltip near each button in the menu
+     *
+     * @param actor the Actor near which the tooltip should be positioned
+     */
     private void positionTooltip(Actor actor) {
         float tooltipX = actor.getX() + actor.getWidth() + 10; // Position to the right of the actor
         float tooltipY = actor.getY() + actor.getHeight() / 2; // Center vertically with the actor
